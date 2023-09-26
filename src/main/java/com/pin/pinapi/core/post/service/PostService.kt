@@ -174,7 +174,6 @@ class PostService(
     fun findAllPost(userId: Long, token: String, page: Int, size: Int): List<PostDto.PostResponse> {
         // token valid check
         val subject = jwtUtil.getSubject(token) ?: throw InvalidTokenException()
-        logger().info("${page}, ${size}")
         // subject == email 이메일이 회원 인지 check
         val user: User = userRepository.findUserByEmailAddress(subject) ?: throw UserNotFoundException()
 
