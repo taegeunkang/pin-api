@@ -13,6 +13,7 @@ class MediaConfig {
     fun multipartResolver(): MultipartResolver {
         val multipartResolver = CommonsMultipartResolver()
         multipartResolver.setMaxUploadSize(FILE_MAX_UPLOAD_SIZE.toLong())
+        println("등록됨")
         return multipartResolver
     }
 }
