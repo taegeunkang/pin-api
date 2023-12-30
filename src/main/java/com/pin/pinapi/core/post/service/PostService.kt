@@ -319,21 +319,23 @@ class PostService(
         val email: String = jwtUtil.getSubject(token)
         val user: User = userRepository.findUserByEmailAddress(email) ?: throw UserNotFoundException()
         val post: Post = postRepository.findPostById(id) ?: throw ContentNotFoundException()
-        if (thumbsUpRepository.findThumbsUpByUserAndPost(user, post) != null) {
+        val isAlreadyLike = thumbsUpRepository.findThumbsUpByUserAndPost(user, post)
+        if (isAlreadyLike != null) {
             thumbsUpRepository.deleteThumbsUpByUserAndPost(user, post)
         } else {
             thumbsUpRepository.save(ThumbsUp(user = user, post = post))
-        }
-        if (post.user != user) {
+            if (post.user != user) {
 
-            sendNotification(
-                "게시글 알림",
-                "${user.userInfo!!.nickName}님이 게시글에 좋아요를 했습니다.",
-                user.userInfo!!.notificationToken!!,
-                post,
-                user
-            )
+                sendNotification(
+                    "게시글 알림",
+                    "${user.userInfo!!.nickName}님이 게시글에 좋아요를 했습니다.",
+                    user.userInfo!!.notificationToken,
+                    post,
+                    user
+                )
+            }
         }
+
 
         return thumbsUpRepository.countThumbsUpsByPost(post)
     }
@@ -480,14 +482,18 @@ class PostService(
     }
 
 
-    fun sendNotification(title: String, message: String, token: String, post: Post, user: User) {
+    fun sendNotification(title: String, message: String, token: String?, post: Post, user: User) {
         logger().info("알림 보냄  to ${user.emailAddress}")
-        firebaseMessagingService.sendMessage(
-            token,
-            title, message
-        )
-        // 알람 내역 저장
-        notiRepository.save(Noti(message, false, post, user))
+        try {
+            firebaseMessagingService.sendMessage(
+                token!!,
+                title, message
+            )
+            // 알람 내역 저장
+            notiRepository.save(Noti(message, false, post, user))
+        } catch (e: Exception) {
+            logger().info("알림 보내기 실패")
+        }
     }
 
 
