@@ -27,12 +27,6 @@ class PostController(val postService: PostService) {
         return postService.findAllMapPosts(id, token)
     }
 
-    // myList 포스트 조회
-    @PostMapping("/myListAll")
-    fun findMyListAll(@RequestBody postMyList: PostDto.PostMyList): List<PostDto.PostMyListResponse> {
-        return postService.findMyListAll(postMyList);
-    }
-
 
     @ApiOperation(value = "포스트 생성")
     @PostMapping("/create", consumes = [MediaType.MULTIPART_FORM_DATA_VALUE])
@@ -60,6 +54,7 @@ class PostController(val postService: PostService) {
         postService.create(post, token)
     }
 
+    @ApiOperation(value = "동영상 저장")
     @PostMapping("/v", consumes = [MediaType.MULTIPART_FORM_DATA_VALUE])
     fun videoSave(@RequestParam("video") video: MultipartFile): String {
         return FileUtil.fileSave(video, "mov");

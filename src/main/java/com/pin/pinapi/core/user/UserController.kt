@@ -66,6 +66,7 @@ class UserController(val userService: UserService) {
         userService.deleteUser(emailAddress, token)
     }
 
+    @ApiOperation(value = "로그인 여부 확인")
     @PostMapping("/check")
     fun checkLoggedIn(@RequestHeader("Authorization") token: String): UserDto.checkResponse {
         return userService.checkLoggedIn(token)
@@ -138,6 +139,7 @@ class UserController(val userService: UserService) {
         return FileUtil.getImage(watch)
     }
 
+    @ApiOperation(value = "프로필 이미지 변경")
     @PostMapping("/profile/update/profileImage")
     fun updateProfileImage(
         @RequestPart("profileImage") profileImage: MultipartFile?,
@@ -146,7 +148,7 @@ class UserController(val userService: UserService) {
         userService.updateProfileImage(profileImage, token)
     }
 
-
+    @ApiOperation(value = "프로필 배경 변경")
     @PostMapping("/profile/update/backgroundImage")
     fun updateBackgroundImage(
         @RequestPart("backgroundImage") backgroundImage: MultipartFile?,
