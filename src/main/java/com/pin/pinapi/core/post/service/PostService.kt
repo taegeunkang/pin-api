@@ -125,9 +125,8 @@ class PostService(
                 media1.add(media.name)
             }
         }
+        val date: Date = Date.from(content.createdDate!!.toInstant(ZoneOffset.ofHours(0)))
 
-
-        val date: Date = Date.from(content.createdDate!!.toInstant(ZoneOffset.ofHours(9)))
 
         // 좋아요 수
         val thumbsUpCount = thumbsUpRepository.countThumbsUpsByPost(content)

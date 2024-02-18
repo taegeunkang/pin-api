@@ -17,15 +17,15 @@ class SwaggerConfig {
     fun api(): Docket {
         return Docket(DocumentationType.SWAGGER_2).useDefaultResponseMessages(false)
             .select()
-            .apis(RequestHandlerSelectors.basePackage("com.trep.trepapi")).paths(PathSelectors.any()).build().apiInfo(
+            .apis(RequestHandlerSelectors.basePackage("com.pin.pinapi")).paths(PathSelectors.any()).build().apiInfo(
                 apiInfo()
             )
     }
 
     private fun apiInfo(): ApiInfo {
         return ApiInfoBuilder()
-            .title("TREP API")
-            .description("trep api endpoints")
+            .title("PIN API")
+            .description("pin api endpoints")
             .version("1.0")
             .build()
     }

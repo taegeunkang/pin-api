@@ -17,7 +17,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class JWTUtil {
-    private String secret = "trep-api-secret-key";
+    private String secret = "pin-api-secret-key";
     // 토큰 만기일 1일
     private long expire = 60 * 24;
     // 리프레시 토큰 만기일 30일

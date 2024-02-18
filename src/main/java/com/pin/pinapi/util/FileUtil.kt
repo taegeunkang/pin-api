@@ -15,7 +15,7 @@ import java.util.*
 object FileUtil {
 
     val filePath: String
-        get() = "/Users/deankang/Documents/GitHub/pin-api" + "/files"
+        get() = "/files"
 
     fun makeFolder(path: String) {
         val folder = File(path)
