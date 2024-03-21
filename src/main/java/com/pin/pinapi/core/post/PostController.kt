@@ -18,6 +18,13 @@ import org.springframework.web.multipart.MultipartFile
 @RequestMapping("/post")
 @RestController
 class PostController(val postService: PostService) {
+    @ApiOperation(value = "사용자 전체 포스트 정보 조회")
+    @GetMapping("/test")
+    fun findAllPost(): String {
+        return "check ok"
+
+    }
+
 
     // 사용자 전체 포스트 조회
     // 지도에 표시

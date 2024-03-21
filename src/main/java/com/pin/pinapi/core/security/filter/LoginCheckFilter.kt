@@ -46,6 +46,7 @@ class LoginCheckFilter(private val jwtUtil: com.pin.pinapi.core.security.util.JW
 
     companion object {
         private val WHITE_LIST = arrayOf(
+            "/post/test",
             "/user/register",
             "/user/login",
             "/user/login/oauth",
