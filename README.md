@@ -109,4 +109,4 @@
 
 ### API 명세
 
-[swagger](https://dev-dean.com/docs)
+[swagger](https://dev-dean.com/api-docs)
