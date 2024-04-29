@@ -1,5 +1,7 @@
 package com.pin.pinapi.core.email.service
 
+import com.pin.pinapi.core.email.dto.EmailDto
+import com.pin.pinapi.core.email.entity.EmailVerification
 import com.pin.pinapi.core.email.exception.*
 import com.pin.pinapi.core.email.repository.EmailRepository
 import com.pin.pinapi.core.user.repository.UserRepository
@@ -15,17 +17,16 @@ import javax.mail.internet.MimeMessage
 
 @Service
 class EmailService(
-    val javaMailSender: JavaMailSender,
-    val emailRepository: EmailRepository,
-    val userRepository: UserRepository
+    private val javaMailSender: JavaMailSender,
+    private val emailRepository: EmailRepository,
+    private val userRepository: UserRepository
 ) {
-
 
     private fun createMessage(to: String, key: String): MimeMessage {
         logger().info("보내는 대상 : ${to}")
         val message: MimeMessage = javaMailSender.createMimeMessage()
         message.addRecipients(MimeMessage.RecipientType.TO, to) //보내는 대상
-        message.setSubject("Pin 이메일 인증 코드: $key") //제목
+        message.subject = "Pin 이메일 인증 코드: $key" //제목
 
         var msg = ""
         msg += "<h1 style=\"font-size: 30px; padding-right: 30px; padding-left: 30px;\">이메일 인증</h1>"
@@ -40,17 +41,15 @@ class EmailService(
 
     @Transactional(readOnly = true)
     fun isEmailVerifiedOrRecentlySent(email: String) {
-        val user = userRepository.findUserByEmailAddress(email)
-        if (user != null) {
-            throw com.pin.pinapi.core.email.exception.AlreadyVerifiedEmailException()
-        }
+        userRepository.findById(email).ifPresent { throw AlreadyVerifiedEmailException() }
     }
 
     @Synchronized
-    fun sendMessage(to: String): com.pin.pinapi.core.email.dto.EmailDto.EmailResponse {
+    @Transactional
+    fun sendMessage(to: String): EmailDto.EmailResponse {
         isEmailVerifiedOrRecentlySent(to)
 
-        val user: com.pin.pinapi.core.email.entity.EmailVerification? =
+        val user: EmailVerification? =
             emailRepository.findEmailVerificationByEmailAddress(to)
         val key = createKey()
         val expiredDate = Date.from(ZonedDateTime.now().plusMinutes(3).toInstant())
@@ -60,7 +59,7 @@ class EmailService(
             user.verificationKey = key
             emailRepository.save(user)
         } else {
-            emailRepository.save(com.pin.pinapi.core.email.entity.EmailVerification(to, key, expiredDate, false))
+            emailRepository.save(EmailVerification(to, key, expiredDate, false))
         }
         val message: MimeMessage = createMessage(to, key)
         try { //예외처리
@@ -68,17 +67,17 @@ class EmailService(
         } catch (ex: MailException) {
             throw com.pin.pinapi.core.email.exception.SendEmailFailedException()
         }
-        return com.pin.pinapi.core.email.dto.EmailDto.EmailResponse(to, expiredDate)
+        return EmailDto.EmailResponse(to, expiredDate)
     }
 
     @Transactional
     fun verifyKey(email: String, key: String): Boolean {
-        val user: com.pin.pinapi.core.email.entity.EmailVerification =
+        val user: EmailVerification =
             emailRepository.findEmailVerificationByEmailAddress(email)
-                ?: throw com.pin.pinapi.core.email.exception.InvalidEmailException()
+                ?: throw InvalidEmailException()
         // 인증 기한이 지났을 경우
         if (user.expiredDate.before(Date.from(ZonedDateTime.now().toInstant()))) {
-            throw com.pin.pinapi.core.email.exception.KeyExpiredException()
+            throw KeyExpiredException()
         }
         if (user.verificationKey == key) {
             user.verified = true
@@ -91,11 +90,14 @@ class EmailService(
 
     @Transactional
     fun isVerified(emailAddress: String) {
-        val emailVerification: com.pin.pinapi.core.email.entity.EmailVerification? =
+
+        val emailVerification: EmailVerification? =
             emailRepository.findEmailVerificationByEmailAddress(emailAddress)
+
         if (emailVerification == null || !emailVerification.verified) {
-            throw com.pin.pinapi.core.email.exception.NotVerifiedEmailException()
+            throw NotVerifiedEmailException()
         }
+
         emailRepository.deleteByEmailAddress(emailVerification.emailAddress)
     }
 

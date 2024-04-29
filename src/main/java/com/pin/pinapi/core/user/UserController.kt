@@ -11,12 +11,15 @@ import org.springframework.web.multipart.MultipartFile
 
 @RequestMapping(value = ["/user"], produces = [MediaType.APPLICATION_JSON_VALUE])
 @RestController
-class UserController(val userService: UserService) {
+class UserController(
+    private val userService: UserService,
+    private val fileUtil: FileUtil
+) {
 
     @ApiOperation(value = "회원가입")
     @PostMapping(value = ["/register"], consumes = [MediaType.APPLICATION_JSON_VALUE])
-    fun register(@RequestBody registerDTO: UserDto.Register): UserDto.RegisterResponse {
-        return userService.register(registerDTO)
+    fun register(@RequestBody registerDTO: UserDto.Register) {
+        userService.register(registerDTO)
     }
 
     @ApiOperation(value = "로그인")
@@ -87,14 +90,14 @@ class UserController(val userService: UserService) {
 
     @ApiOperation("팔로우 추가/취소 (토글)")
     @PostMapping("/follow")
-    fun follow(@RequestParam("userId") userId: Long, @RequestHeader("Authorization") token: String): Long {
+    fun follow(@RequestParam("userId") userId: String, @RequestHeader("Authorization") token: String): Long {
         return userService.addOrRemoveFollow(userId, token)
     }
 
 
     @ApiOperation("팔로워 차단/삭제")
     @PostMapping("/follower/block")
-    fun blockFollower(@RequestParam("userId") userId: Long, @RequestHeader("Authorization") token: String) {
+    fun blockFollower(@RequestParam("userId") userId: String, @RequestHeader("Authorization") token: String) {
         userService.blockFollower(userId, token)
     }
 
@@ -126,7 +129,7 @@ class UserController(val userService: UserService) {
     @ApiOperation("사용자 프로필 조회")
     @PostMapping("/profile/info")
     fun getUserInfo(
-        @RequestParam("userId") userId: Long,
+        @RequestParam("userId") userId: String,
         @RequestHeader("Authorization") token: String
     ): UserDto.profileResponseDto {
         return userService.getUserProfile(userId, token)
@@ -136,7 +139,7 @@ class UserController(val userService: UserService) {
     @GetMapping("/profile/image", produces = [MediaType.IMAGE_PNG_VALUE])
     fun getImage(@RequestParam watch: String): ByteArray {
         logger().info("프로필 이미지 조회 : {} ", watch)
-        return FileUtil.getImage(watch)
+        return fileUtil.getImage(watch)
     }
 
     @ApiOperation(value = "프로필 이미지 변경")

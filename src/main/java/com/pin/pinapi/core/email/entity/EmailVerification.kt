@@ -16,6 +16,4 @@ class EmailVerification(
     var expiredDate: Date,
     @Column(nullable = false)
     var verified: Boolean = false
-) : BaseTimeEntity() {
-
-}
+) : BaseTimeEntity()

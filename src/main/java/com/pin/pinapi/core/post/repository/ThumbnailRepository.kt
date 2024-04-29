@@ -6,5 +6,5 @@ import org.springframework.data.jpa.repository.JpaRepository
 
 interface ThumbnailRepository : JpaRepository<Thumbnail, Long> {
 
-    fun findByMedia(media: Media): Thumbnail
+    fun findByMedia(media: Media): Thumbnail?
 }

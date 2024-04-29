@@ -2,18 +2,22 @@ package com.pin.pinapi.core.post.entity
 
 import com.pin.pinapi.core.user.entity.BaseTimeEntity
 import com.pin.pinapi.core.user.entity.User
+import java.io.Serializable
 import javax.persistence.*
 
 @Entity
+@IdClass(ThumbsUpId::class)
 class ThumbsUp(
+    @Id
     @ManyToOne(fetch = FetchType.LAZY)
     val post: Post,
+    @Id
     @ManyToOne(fetch = FetchType.LAZY)
     val user: User
 
-) : BaseTimeEntity() {
+) : BaseTimeEntity()
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    var id: Long = 0
-}
+data class ThumbsUpId(
+    val post: Long? = null,
+    val user: String? = null
+) : Serializable

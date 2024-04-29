@@ -17,11 +17,20 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class JWTUtil {
-    private String secret = "pin-api-secret-key";
+
+    private String secret;
     // 토큰 만기일 1일
-    private long expire = 60 * 24;
+    private long expire;
     // 리프레시 토큰 만기일 30일
-    private long refreshTokenExpire = 60 * 24 * 30;
+    private long refreshTokenExpire;
+
+
+    public JWTUtil(String secret, long expire, long refreshTokenExpire) {
+        this.secret = secret;
+        this.expire = expire;
+        this.refreshTokenExpire = refreshTokenExpire;
+        System.out.println("secret");
+    }
 
     //토큰 생성
     public String generate(String content, long expire) {
