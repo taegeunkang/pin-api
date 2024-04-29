@@ -9,9 +9,8 @@ import org.springframework.data.repository.query.Param
 
 interface UserInfoRepository : JpaRepository<UserInfo, Long> {
     fun findByNickName(nickname: String?): UserInfo?
-    fun findByUserId(id: Long?): UserInfo?
     fun findByUser(user: User): UserInfo?
-    fun deleteByUserId(id: Long)
+    fun deleteByUser(user: User)
 
     fun findAllByNickNameContainingOrderByNickNameAsc(word: String, page: Pageable): List<UserInfo>
 

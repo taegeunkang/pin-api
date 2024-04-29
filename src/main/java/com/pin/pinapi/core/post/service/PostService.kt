@@ -42,7 +42,7 @@ class PostService(
     // 따로 반환
     // id : 사용자 id
     @Transactional(readOnly = true)
-    fun findAllMapPosts(id: Long, token: String): PostDto.PostMapAllResponse {
+    fun findAllMapPosts(userId: String, token: String): PostDto.PostMapAllResponse {
         // token valid check
         val subject = jwtUtil.getSubject(token) ?: throw InvalidTokenException()
         // subject == email 이메일이 회원 인지 check
@@ -50,11 +50,11 @@ class PostService(
         val userInfo: UserInfo = userInfoRepository.findByUser(user) ?: throw UserNotFoundException() //수정 예정
 
         val result: MutableList<PostDto.ContentDtoResponse> = mutableListOf()
-        val myContents: List<Post> = postRepository.findAllByUserId(id)
+        val myContents: List<Post> = postRepository.findAllByUser(User(userId))
         val currentTime: LocalDateTime = LocalDateTime.now()
 
         val followContents: List<Post> =
-            postRepository.findAllByUserAndFollowBeforeYesterDay(user, LocalDateTime.now().minusHours(24))
+            postRepository.findAllByUserAndFollowBeforeYesterday(user, LocalDateTime.now().minusHours(24))
         val contents = myContents + followContents
         if (contents.isEmpty()) throw ContentNotFoundException()
 
@@ -69,7 +69,7 @@ class PostService(
             }
             val date: Date = Date.from(c.createdDate!!.toInstant(ZoneOffset.ofHours(9)))
             val detail = findPost(c.id, token)
-            result.add(PostDto.ContentDtoResponse(c.id, c.user.id, c.lat, c.lon, fileName, date, detail))
+            result.add(PostDto.ContentDtoResponse(c.id, c.user.emailAddress, c.lat, c.lon, fileName, date, detail))
         }
 
         return PostDto.PostMapAllResponse(result)
@@ -81,8 +81,8 @@ class PostService(
     fun findMyListAll(postMyList: PostDto.PostMyList): List<PostDto.PostMyListResponse> {
         val myList: MutableList<PostDto.PostMyListResponse> = mutableListOf()
         val posts: Page<Post> =
-            postRepository.findAllByUserIdOrderByCreatedDateDesc(
-                postMyList.userId,
+            postRepository.findAllByUserOrderByCreatedDateDesc(
+                User(postMyList.userId),
                 PageRequest.of(postMyList.page, postMyList.size)
             )
         if (posts.isEmpty) throw ContentNotFoundException()
@@ -116,7 +116,7 @@ class PostService(
         val user: User = userRepository.findUserByEmailAddress(subject) ?: throw UserNotFoundException()
 
         val content: Post = postRepository.findPostById(id) ?: throw ContentNotFoundException()
-        val userInfo = userInfoRepository.findByUserId(content.user.id) ?: throw UserNotFoundException()
+        val userInfo = userInfoRepository.findByUser(User(content.user.emailAddress)) ?: throw UserNotFoundException()
 
         val medias: List<Media>? = mediaRepository.findAllByPost(content)
         var media1 = mutableListOf<String>()
@@ -138,10 +138,10 @@ class PostService(
         val commentCount: Long = commentRepository.countCommentByPostAndReplyIsNull(content)
 
         val mentionResult = mutableListOf<PostDto.ProfileSummaryResponseDto>()
-        val mentionList: List<Long> = mentionRepository.findAllByPost(content).map { it.user.id }
+        val mentionList: List<String> = mentionRepository.findAllByPost(content).map { it.user.emailAddress }
 
         for (mm in mentionList) {
-            val mentionUserInfo: UserInfo = userInfoRepository.findByUserId(mm) ?: throw UserNotFoundException()
+            val mentionUserInfo: UserInfo = userInfoRepository.findByUser(User(mm)) ?: throw UserNotFoundException()
             mentionResult.add(
                 PostDto.ProfileSummaryResponseDto(
                     mentionUserInfo.id,
@@ -155,7 +155,7 @@ class PostService(
         return PostDto.PostResponse(
             content.id,
             userInfo.nickName,
-            content.user.id,
+            content.user.emailAddress,
             userInfo.profileImg,
             content.content,
             media1,
@@ -170,15 +170,15 @@ class PostService(
     }
 
     @Transactional(readOnly = true)
-    fun findAllPost(userId: Long, token: String, page: Int, size: Int): List<PostDto.PostResponse> {
+    fun findAllPost(userId: String, token: String, page: Int, size: Int): List<PostDto.PostResponse> {
         // token valid check
         val subject = jwtUtil.getSubject(token) ?: throw InvalidTokenException()
         // subject == email 이메일이 회원 인지 check
         val user: User = userRepository.findUserByEmailAddress(subject) ?: throw UserNotFoundException()
 
         val contents: Page<Post> =
-            postRepository.findAllByUserIdOrderByCreatedDateDesc(userId, PageRequest.of(page, size))
-        val userInfo = userInfoRepository.findByUserId(userId) ?: throw UserNotFoundException()
+            postRepository.findAllByUserOrderByCreatedDateDesc(User(userId), PageRequest.of(page, size))
+        val userInfo = userInfoRepository.findByUser(User(userId)) ?: throw UserNotFoundException()
 
         var result = mutableListOf<PostDto.PostResponse>()
         for (c in contents) {
@@ -206,10 +206,10 @@ class PostService(
             val commentCount: Long = commentRepository.countCommentByPostAndReplyIsNull(c)
             // 멘션
             val mentionResult = mutableListOf<PostDto.ProfileSummaryResponseDto>()
-            val mentionList: List<Long> = mentionRepository.findAllByPost(c).map { it.user.id }
+            val mentionList: List<String> = mentionRepository.findAllByPost(c).map { it.user.emailAddress }
 
             for (mm in mentionList) {
-                val mentionUserInfo: UserInfo = userInfoRepository.findByUserId(mm) ?: throw UserNotFoundException()
+                val mentionUserInfo: UserInfo = userInfoRepository.findByUser(User(mm)) ?: throw UserNotFoundException()
                 mentionResult.add(
                     PostDto.ProfileSummaryResponseDto(
                         mentionUserInfo.id,
@@ -223,7 +223,7 @@ class PostService(
                 PostDto.PostResponse(
                     c.id,
                     userInfo.nickName,
-                    user.id,
+                    user.emailAddress,
                     userInfo.profileImg,
                     c.content,
                     media1,
@@ -278,7 +278,7 @@ class PostService(
         // 멘션
         if (post.mention != null) {
             for (m in post.mention) {
-                val u = userRepository.findUserById(m) ?: throw UserNotFoundException()
+                val u = userRepository.findById(m).orElseThrow { throw UserNotFoundException() }
                 mentionRepository.save(Mention(contentSaved, u))
             }
         }
@@ -310,7 +310,7 @@ class PostService(
     fun deletePost(token: String, id: Long) {
         val emailFromToken: String = jwtUtil.getSubject(token)
         val user: User = userRepository.findUserByEmailAddress(emailFromToken) ?: throw UserNotFoundException()
-        postRepository.deleteByIdAndUserId(id, user.id)
+        postRepository.deleteByIdAndUser(id, User(user.emailAddress))
     }
 
     @Transactional
@@ -391,7 +391,7 @@ class PostService(
                     c.reply,
                     c.content,
                     u!!.nickName,
-                    u.user.id,
+                    u.user.emailAddress,
                     u.profileImg,
                     cnt,
                     Date.from(c.createdDate!!.toInstant(ZoneOffset.ofHours(0)))
@@ -458,7 +458,7 @@ class PostService(
             val postResponse = findPost(notification.post.id, token)
             a.add(
                 PostDto.NotiResponseDto(
-                    notification.user.id,
+                    notification.user.emailAddress,
                     notification.message,
                     notification.createdDate!!,
                     notification.pressed,
@@ -476,7 +476,7 @@ class PostService(
         val email: String = jwtUtil.getSubject(token)
         val user: User = userRepository.findUserByEmailAddress(email) ?: throw UserNotFoundException()
 
-        val noti = notiRepository.findByUserAndAndPostId(user, postId)
+        val noti = notiRepository.findByUserAndPostId(user, postId)
         noti.pressed = true
     }
 

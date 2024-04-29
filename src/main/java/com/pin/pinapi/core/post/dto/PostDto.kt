@@ -16,7 +16,7 @@ class PostDto {
 
     data class ContentDtoResponse(
         val contentId: Long,
-        val userId: Long,
+        val userId: String,
         val lat: Double,
         val lon: Double,
         val thumbnail: String,
@@ -25,7 +25,7 @@ class PostDto {
     )
 
     data class PostMyList(
-        val userId: Long,
+        val userId: String,
         val page: Int,
         val size: Int
     )
@@ -43,7 +43,7 @@ class PostDto {
     data class PostResponse(
         val postId: Long,
         val nickname: String,
-        val userId: Long,
+        val userId: String,
         val profileImage: String,
         val content: String,
         val mediaFiles: List<String>,
@@ -63,7 +63,7 @@ class PostDto {
         val lon: Double,
         val locationName: String,
         val isPrivate: Boolean,
-        val mention: List<Long>?
+        val mention: List<String>?
     ) {
         fun toPost(user: User): Post {
             return Post(content, lat, lon, locationName, isPrivate, user)
@@ -76,7 +76,7 @@ class PostDto {
 
 
         fun toThumbnail(media: Media, fileName: String, fileSize: Long): Thumbnail {
-            return Thumbnail(fileName, fileSize, media)
+            return Thumbnail(fileName, media, fileSize)
         }
     }
 
@@ -95,7 +95,7 @@ class PostDto {
         val replyId: Long?,
         val content: String,
         val writer: String?,
-        val writerId: Long,
+        val writerId: String,
         val profileImage: String,
         val replyCount: Long,
         val createdDate: Date
@@ -112,7 +112,7 @@ class PostDto {
     )
 
     data class NotiResponseDto(
-        val userId: Long,
+        val userId: String,
         val message: String,
         val createdDate: LocalDateTime,
         val pressed: Boolean,

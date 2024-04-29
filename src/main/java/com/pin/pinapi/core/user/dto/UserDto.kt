@@ -7,7 +7,6 @@ class UserDto {
     data class Error(val timestamp: Date, val status: Int, val code: String, val message: String)
     data class Login(val emailAddress: String, val password: String)
     data class LoginResponse(
-        val id: Long,
         val emailAddress: String,
         val token: String,
         val tokenExpire: Date,
@@ -32,10 +31,8 @@ class UserDto {
         }
     }
 
-    data class RegisterResponse(val id: Long)
     data class OAuth(val provider: String, val accessToken: String, val nonce: String?)
     data class OAuthResponse(
-        val id: Long,
         val emailAddress: String,
         val token: String,
         val tokenExpire: Date,
@@ -45,14 +42,14 @@ class UserDto {
     )
 
     data class checkResponse(
-        val id: Long,
+        val id: String,
         val emailAddress: String
     )
 
-    data class FollowerListDto(val userId: Long, val word: String?, val page: Int, val size: Int)
-    data class FollowerListResponseDto(val userId: Long, val nickname: String, val profileImg: String)
-    data class FollowingListDto(val userId: Long, val word: String?, val page: Int, val size: Int)
-    data class FollowingListResponseDto(val userId: Long, val nickname: String, val profileImg: String)
+    data class FollowerListDto(val userId: String, val word: String?, val page: Int, val size: Int)
+    data class FollowerListResponseDto(val userId: String, val nickname: String, val profileImg: String)
+    data class FollowingListDto(val userId: String, val word: String?, val page: Int, val size: Int)
+    data class FollowingListResponseDto(val userId: String, val nickname: String, val profileImg: String)
 
     data class SearchDto(val word: String, val page: Int, val size: Int)
 
@@ -62,7 +59,7 @@ class UserDto {
 
 
     data class profileResponseDto(
-        val userId: Long,
+        val userId: String,
         val nickname: String,
         val profileImg: String,
         val backgroundImg: String,

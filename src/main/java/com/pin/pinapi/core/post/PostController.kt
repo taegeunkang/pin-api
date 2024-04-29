@@ -30,8 +30,11 @@ class PostController(val postService: PostService) {
     // 지도에 표시
     @ApiOperation(value = "사용자 전체 포스트 정보 조회")
     @PostMapping("/all")
-    fun findAllPost(@RequestParam id: Long, @RequestHeader("Authorization") token: String): PostDto.PostMapAllResponse {
-        return postService.findAllMapPosts(id, token)
+    fun findAllPost(
+        @RequestParam userId: String,
+        @RequestHeader("Authorization") token: String
+    ): PostDto.PostMapAllResponse {
+        return postService.findAllMapPosts(userId, token)
     }
 
 
@@ -45,7 +48,7 @@ class PostController(val postService: PostService) {
         @RequestParam("lon") lon: Double,
         @RequestParam("locationName") locationName: String,
         @RequestParam("isPrivate") isPrivate: Boolean,
-        @RequestParam("mention") mention: List<Long>?,
+        @RequestParam("mention") mention: List<String>?,
         @RequestHeader("Authorization") token: String
     ) {
         val post: PostDto.PostCreateDto = PostDto.PostCreateDto(
@@ -87,7 +90,7 @@ class PostController(val postService: PostService) {
 
     @PostMapping("/find/all")
     fun findAllPost(
-        @RequestParam userId: Long,
+        @RequestParam userId: String,
         @RequestParam page: Int,
         @RequestParam size: Int,
         @RequestHeader("Authorization") token: String

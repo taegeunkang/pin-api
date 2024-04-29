@@ -15,8 +15,8 @@ class UserController(val userService: UserService) {
 
     @ApiOperation(value = "회원가입")
     @PostMapping(value = ["/register"], consumes = [MediaType.APPLICATION_JSON_VALUE])
-    fun register(@RequestBody registerDTO: UserDto.Register): UserDto.RegisterResponse {
-        return userService.register(registerDTO)
+    fun register(@RequestBody registerDTO: UserDto.Register) {
+        userService.register(registerDTO)
     }
 
     @ApiOperation(value = "로그인")
@@ -87,14 +87,14 @@ class UserController(val userService: UserService) {
 
     @ApiOperation("팔로우 추가/취소 (토글)")
     @PostMapping("/follow")
-    fun follow(@RequestParam("userId") userId: Long, @RequestHeader("Authorization") token: String): Long {
+    fun follow(@RequestParam("userId") userId: String, @RequestHeader("Authorization") token: String): Long {
         return userService.addOrRemoveFollow(userId, token)
     }
 
 
     @ApiOperation("팔로워 차단/삭제")
     @PostMapping("/follower/block")
-    fun blockFollower(@RequestParam("userId") userId: Long, @RequestHeader("Authorization") token: String) {
+    fun blockFollower(@RequestParam("userId") userId: String, @RequestHeader("Authorization") token: String) {
         userService.blockFollower(userId, token)
     }
 
@@ -126,7 +126,7 @@ class UserController(val userService: UserService) {
     @ApiOperation("사용자 프로필 조회")
     @PostMapping("/profile/info")
     fun getUserInfo(
-        @RequestParam("userId") userId: Long,
+        @RequestParam("userId") userId: String,
         @RequestHeader("Authorization") token: String
     ): UserDto.profileResponseDto {
         return userService.getUserProfile(userId, token)

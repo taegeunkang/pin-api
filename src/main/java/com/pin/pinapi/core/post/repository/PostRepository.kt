@@ -10,17 +10,17 @@ import org.springframework.data.repository.query.Param
 import java.time.LocalDateTime
 
 interface PostRepository : JpaRepository<Post, Long> {
-    fun findAllByUserIdOrderByCreatedDateDesc(id: Long, pageable: Pageable): Page<Post>
-    fun findAllByUserId(id: Long): List<Post>
+    fun findAllByUserOrderByCreatedDateDesc(user: User, pageable: Pageable): Page<Post>
+    fun findAllByUser(user: User): List<Post>
 
 
     fun findPostById(id: Long): Post?
 
-    fun deleteByIdAndUserId(id: Long, userId: Long)
+    fun deleteByIdAndUser(id: Long, user: User)
 
     fun countByUser(user: User): Long
 
     @Query("select p from Post p join Follow f on f.fromUser = :user and p.user = f.toUser where f.createdDate >= :date order by p.createdDate desc")
-    fun findAllByUserAndFollowBeforeYesterDay(@Param("user") user: User, @Param("date") date: LocalDateTime): List<Post>
+    fun findAllByUserAndFollowBeforeYesterday(@Param("user") user: User, @Param("date") date: LocalDateTime): List<Post>
 
 }

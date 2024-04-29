@@ -9,15 +9,14 @@ class Thumbnail(
 
     @Column(nullable = false)
     val name: String,
+    
+    @OneToOne(fetch = FetchType.LAZY)
+    val media: Media,
     @Column(nullable = false)
     val size: Long,
-    @OneToOne
-    @JoinColumn(name = "media_id")
-    val media: Media
 
-) : BaseTimeEntity() {
-
+    ) : BaseTimeEntity() {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Long = 0
+    val id: Long = 0L
 }
