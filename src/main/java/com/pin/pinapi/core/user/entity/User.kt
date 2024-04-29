@@ -18,9 +18,6 @@ class User(
 
 
     ) : BaseTimeEntity() {
-//    @Id
-//    @GeneratedValue(strategy = GenerationType.IDENTITY)
-//    val id: Long = 0
 
     @OneToOne(mappedBy = "user")
     val userInfo: UserInfo? = null

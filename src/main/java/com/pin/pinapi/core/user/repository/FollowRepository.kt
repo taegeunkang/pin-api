@@ -1,12 +1,13 @@
 package com.pin.pinapi.core.user.repository
 
 import com.pin.pinapi.core.user.entity.Follow
+import com.pin.pinapi.core.user.entity.FollowId
 import com.pin.pinapi.core.user.entity.User
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
 
-interface FollowRepository : JpaRepository<Follow, Long> {
+interface FollowRepository : JpaRepository<Follow, FollowId> {
 
     // 팔로워 조회
     fun findByFromUser(user: User, page: Pageable): Page<Follow>

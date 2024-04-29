@@ -1,6 +1,7 @@
 package com.pin.pinapi.util
 
 import com.pin.pinapi.util.LogUtil.logger
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.core.io.UrlResource
 import org.springframework.core.io.support.ResourceRegion
 import org.springframework.http.HttpHeaders
@@ -13,9 +14,10 @@ import java.nio.file.Paths
 import java.util.*
 
 object FileUtil {
+    
+    @Value("\${media.save.path}")
+    lateinit var filePath: String
 
-    val filePath: String
-        get() = "/files"
 
     fun makeFolder(path: String) {
         val folder = File(path)
@@ -24,14 +26,6 @@ object FileUtil {
             Files.createDirectory(p)
         }
     }
-
-    fun decodeBase64Image(encodedImg: String): ByteArray {
-        val parts = encodedImg.split(",");
-        val imageData = parts[1]
-        val decodedImage = Base64.getDecoder().decode(imageData)
-        return decodedImage
-    }
-
 
     fun fileSave(mfile: MultipartFile, ext: String): String {
         val file: ByteArray = mfile.bytes

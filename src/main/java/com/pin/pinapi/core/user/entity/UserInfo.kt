@@ -4,6 +4,8 @@ import javax.persistence.*
 
 @Entity
 class UserInfo(
+    @Id
+    val userId: String,
     @Column(nullable = false, unique = true)
     var nickName: String,
     @Column(nullable = false)
@@ -12,11 +14,11 @@ class UserInfo(
     var backgroundImg: String,
     @Column(nullable = true)
     var notificationToken: String?,
-    @OneToOne(cascade = [CascadeType.ALL])
-    val user: User,
-) {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Long = 0
 
+    ) {
+
+    @MapsId("userId")
+    @OneToOne(cascade = [CascadeType.ALL])
+    @JoinColumn(name = "user_id")
+    val user: User? = null
 }

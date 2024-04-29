@@ -7,8 +7,8 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
 
-interface UserInfoRepository : JpaRepository<UserInfo, Long> {
-    fun findByNickName(nickname: String?): UserInfo?
+interface UserInfoRepository : JpaRepository<UserInfo, String> {
+    fun findByNickName(nickname: String): UserInfo?
     fun findByUser(user: User): UserInfo?
     fun deleteByUser(user: User)
 

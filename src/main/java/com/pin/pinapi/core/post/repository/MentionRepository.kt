@@ -8,5 +8,4 @@ import org.springframework.data.jpa.repository.JpaRepository
 interface MentionRepository : JpaRepository<Mention, MentionId> {
 
     fun findAllByPost(post: Post): List<Mention>
-    fun findByPost(post: Post): Mention
 }

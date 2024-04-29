@@ -40,7 +40,7 @@ class UserService(
 
     @Transactional(readOnly = true)
     fun login(loginDTO: UserDto.Login): UserDto.LoginResponse {
-        val user = userRepository.findUserByEmailAddress(loginDTO.emailAddress) ?: throw UserNotFoundException()
+        val user = userRepository.findById(loginDTO.emailAddress).orElseThrow { throw UserNotFoundException() }
         val isMatch = passwordEncoder.matches(loginDTO.password, user.password)
 
         val isFirstLogin = if (userInfoRepository.findByUser(user) == null) true else false
@@ -131,7 +131,7 @@ class UserService(
     }
 
     private fun isAlreadySignedUp(email: String): Boolean {
-        return userRepository.findUserByEmailAddress(email) != null
+        return userRepository.findById(email).isPresent
     }
 
     private fun createRandomNickname(): String {
@@ -194,9 +194,8 @@ class UserService(
     @Transactional
     fun isRegisterAvailable(registerDto: UserDto.Register) {
         emailService.isVerified(registerDto.emailAddress)
-
-        userRepository.findUserByEmailAddress(registerDto.emailAddress)
-            .let { a: User? -> if (a != null) throw UserExistsException() }
+        userRepository.findById(registerDto.emailAddress)
+            .ifPresent { a: User? -> if (a != null) throw UserExistsException() }
 
     }
 
@@ -205,7 +204,7 @@ class UserService(
         val (emailAddress: String, password: String) = passwordResetDto
 
         emailService.isVerified(emailAddress)
-        val user = userRepository.findUserByEmailAddress(emailAddress)
+        val user = userRepository.findById(emailAddress).orElseThrow { throw UserNotFoundException() }
         logger().info("user {} pasword reset to {}", emailAddress, password)
 
         if (user == null) {
@@ -226,7 +225,7 @@ class UserService(
     @Transactional
     fun updateNickname(token: String, nickname: String) {
         val emailAddress = jwtUtil.getSubject(token) ?: throw InvalidTokenException()
-        val user = userRepository.findUserByEmailAddress(emailAddress) ?: throw UserNotFoundException()
+        val user = userRepository.findById(emailAddress).orElseThrow { throw UserNotFoundException() }
 
         isDuplicated(nickname)
 
@@ -244,16 +243,14 @@ class UserService(
 
         if (emailAddress != userEmail) throw EmailAndTokenNotMatchException()
 
-        val user = userRepository.findUserByEmailAddress(userEmail) ?: throw UserNotFoundException()
+        val user = userRepository.findById(userEmail).orElseThrow { throw UserNotFoundException() }
         userInfoRepository.deleteByUser(User(user.emailAddress))
     }
 
     @Transactional(readOnly = true)
     fun checkLoggedIn(token: String): UserDto.checkResponse {
         val subject = jwtUtil.getSubject(token)
-        val user = userRepository.findUserByEmailAddress(subject)
-        user ?: throw UserNotFoundException()
-
+        val user = userRepository.findById(subject).orElseThrow { throw UserNotFoundException() }
         return UserDto.checkResponse(user.emailAddress, user.emailAddress)
     }
 
@@ -278,7 +275,7 @@ class UserService(
         }
         val followers = mutableListOf<UserDto.FollowerListResponseDto>()
         f.forEach { ff ->
-            followers.add(UserDto.FollowerListResponseDto(ff.user.emailAddress, ff.nickName, ff.profileImg))
+            followers.add(UserDto.FollowerListResponseDto(ff.user!!.emailAddress, ff.nickName, ff.profileImg))
         }
 
         return followers
@@ -305,7 +302,7 @@ class UserService(
         }
         val followers = mutableListOf<UserDto.FollowingListResponseDto>()
         f.forEach { ff ->
-            followers.add(UserDto.FollowingListResponseDto(ff.user.emailAddress, ff.nickName, ff.profileImg))
+            followers.add(UserDto.FollowingListResponseDto(ff.user!!.emailAddress, ff.nickName, ff.profileImg))
         }
 
         return followers
@@ -314,7 +311,7 @@ class UserService(
     @Transactional
     fun addOrRemoveFollow(userId: String, token: String): Long {
         val subject = jwtUtil.getSubject(token)
-        val fromUser = userRepository.findUserByEmailAddress(subject) ?: throw UserNotFoundException()
+        val fromUser = userRepository.findById(subject).orElseThrow { throw UserNotFoundException() }
         val toUser = userRepository.findById(userId).orElseThrow { throw UserNotFoundException() }
         val f = followRepository.findByFromUserAndToUser(fromUser, toUser)
         var f1: Boolean = true
@@ -342,7 +339,7 @@ class UserService(
     @Transactional
     fun blockFollower(userId: String, token: String) {
         val subject = jwtUtil.getSubject(token)
-        val toUser = userRepository.findUserByEmailAddress(subject) ?: throw UserNotFoundException()
+        val toUser = userRepository.findById(subject).orElseThrow { throw UserNotFoundException() }
         val fromUser = userRepository.findById(userId).orElseThrow { throw UserNotFoundException() }
         val f = followRepository.findByFromUserAndToUser(fromUser, toUser) ?: throw ContentNotFoundException()
         f.banned = true
@@ -351,7 +348,7 @@ class UserService(
     @Transactional
     fun search(searchDto: UserDto.SearchDto, token: String): List<UserDto.SearchResponseDto> {
         val subject = jwtUtil.getSubject(token)
-        val user = userRepository.findUserByEmailAddress(subject) ?: throw UserNotFoundException()
+        val user = userRepository.findById(subject).orElseThrow { throw UserNotFoundException() }
 //        val blockedList = followRepository.findByFromUser(user, PageRequest.of(searchDto.page, searchDto.size))
 //            .filter { u -> !u.banned }.map { u1 -> u1.toUser }.toList()
 
@@ -359,7 +356,7 @@ class UserService(
             searchDto.word,
             PageRequest.of(searchDto.page, searchDto.size)
         )
-            .map { m -> UserDto.SearchResponseDto(m.id, m.nickName, m.profileImg) }.toList()
+            .map { m -> UserDto.SearchResponseDto(m.userId, m.nickName, m.profileImg) }.toList()
 
         return searchResult
     }
@@ -367,7 +364,7 @@ class UserService(
 
     fun initProfile(profileInitDto: UserDto.ProfileInitDto, token: String) {
         val subject = jwtUtil.getSubject(token)
-        val user = userRepository.findUserByEmailAddress(subject) ?: throw UserNotFoundException()
+        val user = userRepository.findById(subject).orElseThrow { throw UserNotFoundException() }
 
         isDuplicated(profileInitDto.nickname)
 
@@ -377,11 +374,11 @@ class UserService(
 
         userInfoRepository.save(
             UserInfo(
+                user.emailAddress,
                 profileInitDto.nickname,
                 "default-profile.png",
                 "default-background.png",
                 null,
-                user
             )
         )
 
@@ -390,7 +387,7 @@ class UserService(
     @Transactional
     fun setNotificationKey(fcmToken: String, token: String) {
         val subject = jwtUtil.getSubject(token)
-        val user = userRepository.findUserByEmailAddress(subject) ?: throw UserNotFoundException()
+        val user = userRepository.findById(subject).orElseThrow { throw UserNotFoundException() }
         val userInfo = userInfoRepository.findByUser(user)
         userInfo!!.notificationToken = fcmToken
     }
@@ -398,7 +395,7 @@ class UserService(
     // 팔로워 조회
     fun getUserProfile(userId: String, token: String): UserDto.profileResponseDto {
         val subject = jwtUtil.getSubject(token)
-        val fromUser = userRepository.findUserByEmailAddress(subject) ?: throw UserNotFoundException()
+        val fromUser = userRepository.findById(subject).orElseThrow { throw UserNotFoundException() }
         val toUser = userRepository.findById(userId).orElseThrow { throw UserNotFoundException() }
         val userInfo = userInfoRepository.findByUser(toUser) ?: throw NotInitUserException()
         val posts: Long = postRepository.countByUser(toUser)
@@ -430,10 +427,10 @@ class UserService(
 
     @Transactional
     fun updateProfileImage(profileImage: MultipartFile?, token: String) {
-        val subject = jwtUtil.getSubject(token)
-        val user = userRepository.findUserByEmailAddress(subject) ?: throw UserNotFoundException()
+        val emailAddress = jwtUtil.getSubject(token)
+        val user = userRepository.findById(emailAddress).orElseThrow { throw UserNotFoundException() }
         val userInfo = userInfoRepository.findByUser(user) ?: throw UserNotFoundException()
-        var fileName: String = "default-profile.png"
+        var fileName = "default-profile.png"
         if (profileImage != null) {
             fileName = FileUtil.fileSave(profileImage, "png")
         }
@@ -446,7 +443,7 @@ class UserService(
     @Transactional
     fun updateBackgroundImage(backgroundImage: MultipartFile?, token: String) {
         val subject = jwtUtil.getSubject(token)
-        val user = userRepository.findUserByEmailAddress(subject) ?: throw UserNotFoundException()
+        val user = userRepository.findById(subject).orElseThrow { throw UserNotFoundException() }
         val userInfo = userInfoRepository.findByUser(user) ?: throw UserNotFoundException()
         var fileName: String = "default-background.png"
         if (backgroundImage != null) {

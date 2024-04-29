@@ -37,7 +37,7 @@ class PostDto {
         val date: Date
     )
 
-    data class ProfileSummaryResponseDto(val userId: Long, val nickname: String, val profileImage: String)
+    data class ProfileSummaryResponseDto(val userId: String, val nickname: String, val profileImage: String)
 
 
     data class PostResponse(
@@ -106,7 +106,7 @@ class PostDto {
         val replyId: Long?,
         val content: String,
         val writer: String,
-        val writerId: Long,
+        val writerId: String,
         val profileImage: String,
         val createdDate: Date
     )

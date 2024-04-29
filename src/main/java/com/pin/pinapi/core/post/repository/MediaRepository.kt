@@ -11,7 +11,7 @@ interface MediaRepository : JpaRepository<Media, MediaId> {
 
     fun findAllByPost(post: Post): List<Media>?
 
-    fun findByName(name: String): Media
+    fun findByName(name: String): Media?
 
 
 }

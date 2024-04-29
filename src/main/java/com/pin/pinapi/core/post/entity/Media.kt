@@ -21,7 +21,7 @@ class Media(
     val post: Post,
 
     ) : BaseTimeEntity() {
-        
+
     @OneToOne(mappedBy = "media", cascade = [CascadeType.ALL], orphanRemoval = true)
     val thumbnail: Thumbnail? = null
 }

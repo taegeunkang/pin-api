@@ -19,6 +19,7 @@ import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.io.FileNotFoundException
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 import java.util.*
@@ -46,7 +47,7 @@ class PostService(
         // token valid check
         val subject = jwtUtil.getSubject(token) ?: throw InvalidTokenException()
         // subject == email 이메일이 회원 인지 check
-        val user: User = userRepository.findUserByEmailAddress(subject) ?: throw UserNotFoundException()
+        val user: User = userRepository.findById(subject).orElseThrow { throw UserNotFoundException() }
         val userInfo: UserInfo = userInfoRepository.findByUser(user) ?: throw UserNotFoundException() //수정 예정
 
         val result: MutableList<PostDto.ContentDtoResponse> = mutableListOf()
@@ -110,15 +111,13 @@ class PostService(
     // id : 컨텐츠 id
     // 태그가 없는 게시글의 경우 프론트 백 둘다 핸들링 해야함
     @Transactional(readOnly = true)
-    fun findPost(id: Long, token: String): PostDto.PostResponse {
-        // token valid check
-        val subject = jwtUtil.getSubject(token) ?: throw InvalidTokenException()
-        val user: User = userRepository.findUserByEmailAddress(subject) ?: throw UserNotFoundException()
-
-        val content: Post = postRepository.findPostById(id) ?: throw ContentNotFoundException()
+    fun findPost(postId: Long, token: String): PostDto.PostResponse {
+        val emailAddress = jwtUtil.getSubject(token) ?: throw InvalidTokenException()
+        val user: User = userRepository.findById(emailAddress).orElseThrow { throw UserNotFoundException() }
+        val content: Post = postRepository.findById(postId).orElseThrow { throw ContentNotFoundException() }
         val userInfo = userInfoRepository.findByUser(User(content.user.emailAddress)) ?: throw UserNotFoundException()
-
         val medias: List<Media>? = mediaRepository.findAllByPost(content)
+
         var media1 = mutableListOf<String>()
         if (medias != null) {
             for (media in medias) {
@@ -144,7 +143,7 @@ class PostService(
             val mentionUserInfo: UserInfo = userInfoRepository.findByUser(User(mm)) ?: throw UserNotFoundException()
             mentionResult.add(
                 PostDto.ProfileSummaryResponseDto(
-                    mentionUserInfo.id,
+                    mentionUserInfo.userId,
                     mentionUserInfo.nickName,
                     mentionUserInfo.profileImg
                 )
@@ -174,7 +173,7 @@ class PostService(
         // token valid check
         val subject = jwtUtil.getSubject(token) ?: throw InvalidTokenException()
         // subject == email 이메일이 회원 인지 check
-        val user: User = userRepository.findUserByEmailAddress(subject) ?: throw UserNotFoundException()
+        val user: User = userRepository.findById(subject).orElseThrow { throw UserNotFoundException() }
 
         val contents: Page<Post> =
             postRepository.findAllByUserOrderByCreatedDateDesc(User(userId), PageRequest.of(page, size))
@@ -212,7 +211,7 @@ class PostService(
                 val mentionUserInfo: UserInfo = userInfoRepository.findByUser(User(mm)) ?: throw UserNotFoundException()
                 mentionResult.add(
                     PostDto.ProfileSummaryResponseDto(
-                        mentionUserInfo.id,
+                        mentionUserInfo.userId,
                         mentionUserInfo.nickName,
                         mentionUserInfo.profileImg
                     )
@@ -247,14 +246,13 @@ class PostService(
     // 썸네일 테이블 따로 구성
     @Transactional
     fun create(post: PostDto.PostCreateDto, token: String) {
-        // token valid check
         val subject = jwtUtil.getSubject(token) ?: throw InvalidTokenException()
-        // subject == email 이메일이 회원 인지 check
-        val user: User = userRepository.findUserByEmailAddress(subject) ?: throw UserNotFoundException()
+        val user: User = userRepository.findById(subject).orElseThrow { throw UserNotFoundException() }
         val userInfo: UserInfo = userInfoRepository.findByUser(user)!!
         val content: Post = post.toPost(user)
         val contentSaved: Post = postRepository.save(content)
         var videoCnt = 0
+
         if (post.mediaFiles != null) {
             for (media in post.mediaFiles) {
                 // 컨텐츠 타입
@@ -289,7 +287,7 @@ class PostService(
             if (follower.notificationToken != null) {
                 val title = "게시글 알림"
                 val message = "팔로우 중인 ${userInfo.nickName}님이 새로운 게시글을 업로드했습니다."
-                sendNotification(title, message, follower.notificationToken!!, contentSaved, follower.user)
+                sendNotification(title, message, follower.notificationToken!!, contentSaved, follower.user!!)
             }
 
         }
@@ -309,15 +307,15 @@ class PostService(
     @Transactional
     fun deletePost(token: String, id: Long) {
         val emailFromToken: String = jwtUtil.getSubject(token)
-        val user: User = userRepository.findUserByEmailAddress(emailFromToken) ?: throw UserNotFoundException()
+        val user: User = userRepository.findById(emailFromToken).orElseThrow { throw UserNotFoundException() }
         postRepository.deleteByIdAndUser(id, User(user.emailAddress))
     }
 
     @Transactional
-    fun likePost(token: String, id: Long): Long {
+    fun likePost(token: String, postId: Long): Long {
         val email: String = jwtUtil.getSubject(token)
-        val user: User = userRepository.findUserByEmailAddress(email) ?: throw UserNotFoundException()
-        val post: Post = postRepository.findPostById(id) ?: throw ContentNotFoundException()
+        val user: User = userRepository.findById(email).orElseThrow { throw UserNotFoundException() }
+        val post: Post = postRepository.findById(postId).orElseThrow { throw ContentNotFoundException() }
         val isAlreadyLike = thumbsUpRepository.findThumbsUpByUserAndPost(user, post)
         if (isAlreadyLike != null) {
             thumbsUpRepository.deleteThumbsUpByUserAndPost(user, post)
@@ -342,8 +340,9 @@ class PostService(
     @Transactional
     fun writeComment(commentCreateDto: PostDto.CommentCreateDto, token: String): Long {
         val email: String = jwtUtil.getSubject(token)
-        val user: User = userRepository.findUserByEmailAddress(email) ?: throw UserNotFoundException()
-        val post: Post = postRepository.findPostById(commentCreateDto.postId) ?: throw ContentNotFoundException()
+        val user: User = userRepository.findById(email).orElseThrow { throw UserNotFoundException() }
+        val post: Post =
+            postRepository.findById(commentCreateDto.postId).orElseThrow { throw ContentNotFoundException() }
 
         val comment = commentRepository.save(commentCreateDto.toComment(post, user))
 
@@ -363,7 +362,7 @@ class PostService(
     @Transactional
     fun deleteComment(replyId: Long, token: String) {
         val email: String = jwtUtil.getSubject(token)
-        val user: User = userRepository.findUserByEmailAddress(email) ?: throw UserNotFoundException()
+        val user: User = userRepository.findById(email).orElseThrow { throw UserNotFoundException() }
 
         // 토큰의 주인과 댓글의 작성자가 같다면 삭제
         val comment = commentRepository.findCommentById(replyId) ?: throw ContentNotFoundException()
@@ -376,7 +375,7 @@ class PostService(
     // 댓글 조회
     fun findPostComment(postId: Long, page: PageRequest): List<PostDto.CommentListResponseDto> {
         logger().info("댓글 조회")
-        postRepository.findPostById(postId) ?: throw ContentNotFoundException()
+        postRepository.findById(postId).orElseThrow { throw ContentNotFoundException() }
         val commentList =
             commentRepository.findCommentByPostIdAndReplyIsNullOrderByCreatedDateAsc(postId, page)
 
@@ -391,7 +390,7 @@ class PostService(
                     c.reply,
                     c.content,
                     u!!.nickName,
-                    u.user.emailAddress,
+                    u.user!!.emailAddress,
                     u.profileImg,
                     cnt,
                     Date.from(c.createdDate!!.toInstant(ZoneOffset.ofHours(0)))
@@ -423,7 +422,7 @@ class PostService(
                     c.reply,
                     c.content,
                     u!!.nickName,
-                    u.id,
+                    u.userId,
                     u.profileImg,
                     Date.from(c.createdDate!!.toInstant(ZoneOffset.ofHours(0)))
                 )
@@ -439,8 +438,8 @@ class PostService(
         if (fileName.substring(fileName.length - 3) == "png") {
             return FileUtil.getImage(fileName)
         }
-        val media = mediaRepository.findByName(fileName)
-        val thumbnail = thumbnailRepository.findByMedia(media)
+        val media = mediaRepository.findByName(fileName) ?: throw FileNotFoundException()
+        val thumbnail = thumbnailRepository.findByMedia(media) ?: throw FileNotFoundException()
         return FileUtil.getImage(thumbnail.name)
 
     }
@@ -449,7 +448,7 @@ class PostService(
     @Transactional
     fun findAllAlram(token: String): List<PostDto.NotiResponseDto> {
         val email: String = jwtUtil.getSubject(token)
-        val user: User = userRepository.findUserByEmailAddress(email) ?: throw UserNotFoundException()
+        val user: User = userRepository.findById(email).orElseThrow { throw UserNotFoundException() }
 
         val notiList = notiRepository.findAllByUserOrderByCreatedDateDesc(user)
 
@@ -474,7 +473,7 @@ class PostService(
     @Transactional
     fun readNotification(token: String, postId: Long) {
         val email: String = jwtUtil.getSubject(token)
-        val user: User = userRepository.findUserByEmailAddress(email) ?: throw UserNotFoundException()
+        val user: User = userRepository.findById(email).orElseThrow { throw UserNotFoundException() }
 
         val noti = notiRepository.findByUserAndPostId(user, postId)
         noti.pressed = true
