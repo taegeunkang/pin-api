@@ -17,14 +17,10 @@ import org.springframework.web.multipart.MultipartFile
 
 @RequestMapping("/post")
 @RestController
-class PostController(val postService: PostService) {
-    @ApiOperation(value = "사용자 전체 포스트 정보 조회")
-    @GetMapping("/test")
-    fun findAllPost(): String {
-        return "check ok"
-
-    }
-
+class PostController(
+    private val postService: PostService,
+    private val fileUtil: FileUtil
+) {
 
     // 사용자 전체 포스트 조회
     // 지도에 표시
@@ -67,7 +63,7 @@ class PostController(val postService: PostService) {
     @ApiOperation(value = "동영상 저장")
     @PostMapping("/v", consumes = [MediaType.MULTIPART_FORM_DATA_VALUE])
     fun videoSave(@RequestParam("video") video: MultipartFile): String {
-        return FileUtil.fileSave(video, "mov");
+        return fileUtil.fileSave(video, "mov");
     }
 
     @ApiOperation(value = "포스트 삭제")
@@ -104,7 +100,7 @@ class PostController(val postService: PostService) {
         @RequestParam watch: String,
         @RequestHeader headers: HttpHeaders
     ): ResponseEntity<ResourceRegion> {
-        val video = FileUtil.getResourceRegion(watch, headers)
+        val video = fileUtil.getResourceRegion(watch, headers)
         return ResponseEntity.status(HttpStatus.PARTIAL_CONTENT).contentType(MediaType.parseMediaType("video/mp4"))
             .body(video)
     }

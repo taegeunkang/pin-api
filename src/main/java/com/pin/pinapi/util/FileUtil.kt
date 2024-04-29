@@ -6,6 +6,7 @@ import org.springframework.core.io.UrlResource
 import org.springframework.core.io.support.ResourceRegion
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpRange
+import org.springframework.stereotype.Component
 import org.springframework.util.FileCopyUtils
 import org.springframework.web.multipart.MultipartFile
 import java.io.File
@@ -13,11 +14,11 @@ import java.nio.file.Files
 import java.nio.file.Paths
 import java.util.*
 
-object FileUtil {
-    
+@Component
+class FileUtil(
     @Value("\${media.save.path}")
-    lateinit var filePath: String
-
+    var filePath: String
+) {
 
     fun makeFolder(path: String) {
         val folder = File(path)
@@ -28,10 +29,11 @@ object FileUtil {
     }
 
     fun fileSave(mfile: MultipartFile, ext: String): String {
+
+        makeFolder(filePath)
         val file: ByteArray = mfile.bytes
         val fileName = UUID.randomUUID().toString() + "." + ext
         val savePath = filePath + "/" + fileName
-        makeFolder(filePath)
         val localFile = File(savePath)
         FileCopyUtils.copy(file, localFile)
         return fileName

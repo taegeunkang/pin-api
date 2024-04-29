@@ -17,11 +17,11 @@ import javax.mail.internet.MimeMessage
 
 @Service
 class EmailService(
-    val javaMailSender: JavaMailSender,
-    val emailRepository: EmailRepository,
-    val userRepository: UserRepository
+    private val javaMailSender: JavaMailSender,
+    private val emailRepository: EmailRepository,
+    private val userRepository: UserRepository
 ) {
-    
+
     private fun createMessage(to: String, key: String): MimeMessage {
         logger().info("보내는 대상 : ${to}")
         val message: MimeMessage = javaMailSender.createMimeMessage()

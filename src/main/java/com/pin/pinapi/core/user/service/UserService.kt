@@ -29,13 +29,14 @@ import java.util.*
 
 @Service
 class UserService(
-    val userRepository: UserRepository,
-    val passwordEncoder: PasswordEncoder,
-    val jwtUtil: com.pin.pinapi.core.security.util.JWTUtil,
-    val emailService: EmailService,
-    val userInfoRepository: UserInfoRepository,
-    val followRepository: FollowRepository,
-    val postRepository: PostRepository,
+    private val userRepository: UserRepository,
+    private val passwordEncoder: PasswordEncoder,
+    private val jwtUtil: com.pin.pinapi.core.security.util.JWTUtil,
+    private val emailService: EmailService,
+    private val userInfoRepository: UserInfoRepository,
+    private val followRepository: FollowRepository,
+    private val postRepository: PostRepository,
+    private val fileUtil: FileUtil
 ) {
 
     @Transactional(readOnly = true)
@@ -432,7 +433,7 @@ class UserService(
         val userInfo = userInfoRepository.findByUser(user) ?: throw UserNotFoundException()
         var fileName = "default-profile.png"
         if (profileImage != null) {
-            fileName = FileUtil.fileSave(profileImage, "png")
+            fileName = fileUtil.fileSave(profileImage, "png")
         }
 
         userInfo.profileImg = fileName
@@ -447,7 +448,7 @@ class UserService(
         val userInfo = userInfoRepository.findByUser(user) ?: throw UserNotFoundException()
         var fileName: String = "default-background.png"
         if (backgroundImage != null) {
-            fileName = FileUtil.fileSave(backgroundImage, "png")
+            fileName = fileUtil.fileSave(backgroundImage, "png")
         }
 
         userInfo.backgroundImg = fileName

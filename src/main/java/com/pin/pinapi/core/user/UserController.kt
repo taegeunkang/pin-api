@@ -11,7 +11,10 @@ import org.springframework.web.multipart.MultipartFile
 
 @RequestMapping(value = ["/user"], produces = [MediaType.APPLICATION_JSON_VALUE])
 @RestController
-class UserController(val userService: UserService) {
+class UserController(
+    private val userService: UserService,
+    private val fileUtil: FileUtil
+) {
 
     @ApiOperation(value = "회원가입")
     @PostMapping(value = ["/register"], consumes = [MediaType.APPLICATION_JSON_VALUE])
@@ -136,7 +139,7 @@ class UserController(val userService: UserService) {
     @GetMapping("/profile/image", produces = [MediaType.IMAGE_PNG_VALUE])
     fun getImage(@RequestParam watch: String): ByteArray {
         logger().info("프로필 이미지 조회 : {} ", watch)
-        return FileUtil.getImage(watch)
+        return fileUtil.getImage(watch)
     }
 
     @ApiOperation(value = "프로필 이미지 변경")

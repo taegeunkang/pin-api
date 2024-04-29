@@ -7,6 +7,7 @@ import com.pin.pinapi.core.post.exception.ContentNotFoundException
 import com.pin.pinapi.core.post.exception.MediaNotFoundException
 import com.pin.pinapi.core.post.exception.NotPermittedException
 import com.pin.pinapi.core.post.repository.*
+import com.pin.pinapi.core.security.util.JWTUtil
 import com.pin.pinapi.core.user.entity.User
 import com.pin.pinapi.core.user.entity.UserInfo
 import com.pin.pinapi.core.user.exception.InvalidTokenException
@@ -26,17 +27,18 @@ import java.util.*
 
 @Service
 class PostService(
-    val postRepository: PostRepository,
-    val thumbnailRepository: ThumbnailRepository,
-    val mediaRepository: MediaRepository,
-    val userRepository: UserRepository,
-    val userInfoRepository: UserInfoRepository,
-    val thumbsUpRepository: ThumbsUpRepository,
-    val commentRepository: CommentRepository,
-    val mentionRepository: MentionRepository,
-    val firebaseMessagingService: FirebaseMessagingService,
-    val notiRepository: NotiRepository,
-    val jwtUtil: com.pin.pinapi.core.security.util.JWTUtil
+    private val postRepository: PostRepository,
+    private val thumbnailRepository: ThumbnailRepository,
+    private val mediaRepository: MediaRepository,
+    private val userRepository: UserRepository,
+    private val userInfoRepository: UserInfoRepository,
+    private val thumbsUpRepository: ThumbsUpRepository,
+    private val commentRepository: CommentRepository,
+    private val mentionRepository: MentionRepository,
+    private val firebaseMessagingService: FirebaseMessagingService,
+    private val notiRepository: NotiRepository,
+    private val jwtUtil: JWTUtil,
+    private val fileUtil: FileUtil
 ) {
 
     // 미디어 컨텐츠(사진, 동영상)는 파일 명만 전달하고
@@ -257,14 +259,14 @@ class PostService(
             for (media in post.mediaFiles) {
                 // 컨텐츠 타입
                 val ext: String = if (media.contentType?.startsWith("video") == true) "mp4" else "png"
-                val name: String = FileUtil.fileSave(media, ext)
+                val name: String = fileUtil.fileSave(media, ext)
                 val size: Long = media.size
                 val m: Media = post.toMedia(name, size, ext, contentSaved)
                 val savedMedia = mediaRepository.save(m)
                 // 비디오라면 썸네일도 저장
                 if (ext.equals("mp4")) {
                     val thumbnail = post.thumbnailFiles!!.get(videoCnt)
-                    val tName = FileUtil.fileSave(thumbnail, "png")
+                    val tName = fileUtil.fileSave(thumbnail, "png")
                     val tSize = thumbnail.size
                     val t = post.toThumbnail(savedMedia, tName, tSize)
                     thumbnailRepository.save(t)
@@ -436,11 +438,11 @@ class PostService(
     @Transactional(readOnly = true)
     fun getImage(fileName: String): ByteArray {
         if (fileName.substring(fileName.length - 3) == "png") {
-            return FileUtil.getImage(fileName)
+            return fileUtil.getImage(fileName)
         }
         val media = mediaRepository.findByName(fileName) ?: throw FileNotFoundException()
         val thumbnail = thumbnailRepository.findByMedia(media) ?: throw FileNotFoundException()
-        return FileUtil.getImage(thumbnail.name)
+        return fileUtil.getImage(thumbnail.name)
 
     }
 

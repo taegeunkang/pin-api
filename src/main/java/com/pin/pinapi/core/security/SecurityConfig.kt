@@ -2,6 +2,8 @@ package com.pin.pinapi.core.security
 
 import com.pin.pinapi.core.security.filter.ExceptionHandlerFilter
 import com.pin.pinapi.core.security.filter.LoginCheckFilter
+import com.pin.pinapi.core.security.util.JWTUtil
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
@@ -24,8 +26,12 @@ class SecurityConfig {
     }
 
     @Bean
-    fun jwtUtil(): com.pin.pinapi.core.security.util.JWTUtil {
-        return com.pin.pinapi.core.security.util.JWTUtil()
+    fun jwtUtil(
+        @Value("\${jwt.secret}") secret: String,
+        @Value("\${jwt.expire}") expire: Long,
+        @Value("\${jwt.refreshTokenExpire}") refreshTokenExpire: Long
+    ): JWTUtil {
+        return JWTUtil(secret, expire, refreshTokenExpire)
     }
 
     @Bean
@@ -39,7 +45,7 @@ class SecurityConfig {
     }
 
     @Bean
-    fun loginCheckFilter(): LoginCheckFilter {
-        return LoginCheckFilter(jwtUtil())
+    fun loginCheckFilter(jwtUtil: JWTUtil): LoginCheckFilter {
+        return LoginCheckFilter(jwtUtil)
     }
 }
