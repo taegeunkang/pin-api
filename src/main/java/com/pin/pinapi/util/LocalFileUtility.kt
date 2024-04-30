@@ -15,12 +15,12 @@ import java.nio.file.Paths
 import java.util.*
 
 @Component
-class FileUtil(
+class LocalFileUtility(
     @Value("\${media.save.path}")
     var filePath: String
-) {
+) : FileUtility {
 
-    fun makeFolder(path: String) {
+    override fun makeFolder(path: String) {
         val folder = File(path)
         val p = Paths.get(path)
         if (!folder.exists()) {
@@ -28,7 +28,7 @@ class FileUtil(
         }
     }
 
-    fun fileSave(mfile: MultipartFile, ext: String): String {
+    override fun fileSave(mfile: MultipartFile, ext: String): String {
 
         makeFolder(filePath)
         val file: ByteArray = mfile.bytes
@@ -39,8 +39,7 @@ class FileUtil(
         return fileName
     }
 
-
-    fun getResourceRegion(file: String, headers: HttpHeaders): ResourceRegion {
+    override fun getResourceRegion(file: String, headers: HttpHeaders): ResourceRegion {
 
         logger().info("file resource {}", filePath + "/" + file)
         val video = UrlResource("file:${filePath}/${file}")
@@ -63,7 +62,8 @@ class FileUtil(
 
     }
 
-    fun getImage(file: String): ByteArray {
+
+    override fun getImage(file: String): ByteArray {
         val path: String = "$filePath/$file"
         return File(path).readBytes()
     }

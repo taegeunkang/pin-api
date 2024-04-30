@@ -8,13 +8,12 @@ import org.springframework.web.multipart.commons.CommonsMultipartResolver
 
 @Configuration
 class MediaConfig {
-    @Value("\${media.upload.max}")
-    var FILE_MAX_UPLOAD_SIZE: Long? = null
+
 
     @Bean
-    fun multipartResolver(): MultipartResolver {
+    fun multipartResolver(@Value("\${media.upload.max}") fileMaxUploadSize: Long): MultipartResolver {
         val multipartResolver = CommonsMultipartResolver()
-        multipartResolver.setMaxUploadSize(FILE_MAX_UPLOAD_SIZE!!)
+        multipartResolver.setMaxUploadSize(fileMaxUploadSize)
         return multipartResolver
     }
 }

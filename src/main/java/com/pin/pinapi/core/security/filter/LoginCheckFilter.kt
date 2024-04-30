@@ -32,7 +32,8 @@ class LoginCheckFilter(private val jwtUtil: com.pin.pinapi.core.security.util.JW
     private fun checkURI(requestURI: String): Boolean {
         if (requestURI.startsWith("/docs") || requestURI.startsWith("/swagger-ui")
             || requestURI.startsWith("/v2/api-docs") || requestURI.startsWith("/swagger-resources")
-            || requestURI.startsWith("/csrf") || requestURI.startsWith("/webjars")
+            || requestURI.startsWith("/csrf") || requestURI.startsWith("/webjars") || requestURI.startsWith("/s3")
+            
         ) {
             return true
         }

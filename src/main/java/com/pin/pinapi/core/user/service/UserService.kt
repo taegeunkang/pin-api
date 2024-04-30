@@ -12,7 +12,7 @@ import com.pin.pinapi.core.user.exception.*
 import com.pin.pinapi.core.user.repository.FollowRepository
 import com.pin.pinapi.core.user.repository.UserInfoRepository
 import com.pin.pinapi.core.user.repository.UserRepository
-import com.pin.pinapi.util.FileUtil
+import com.pin.pinapi.util.LocalFileUtility
 import com.pin.pinapi.util.LogUtil.logger
 import net.minidev.json.JSONObject
 import net.minidev.json.parser.JSONParser
@@ -36,7 +36,7 @@ class UserService(
     private val userInfoRepository: UserInfoRepository,
     private val followRepository: FollowRepository,
     private val postRepository: PostRepository,
-    private val fileUtil: FileUtil
+    private val fileUtil: LocalFileUtility
 ) {
 
     @Transactional(readOnly = true)

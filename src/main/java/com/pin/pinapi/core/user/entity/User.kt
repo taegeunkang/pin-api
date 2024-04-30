@@ -15,9 +15,7 @@ class User(
     var password: String? = null,
     @Column(nullable = false)
     val loginType: Social = Social.NONE,
-
-
-    ) : BaseTimeEntity() {
+) : BaseTimeEntity() {
 
     @OneToOne(mappedBy = "user")
     val userInfo: UserInfo? = null

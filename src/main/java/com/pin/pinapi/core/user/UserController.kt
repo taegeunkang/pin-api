@@ -2,7 +2,7 @@ package com.pin.pinapi.core.user
 
 import com.pin.pinapi.core.user.dto.UserDto
 import com.pin.pinapi.core.user.service.UserService
-import com.pin.pinapi.util.FileUtil
+import com.pin.pinapi.util.FileUtility
 import com.pin.pinapi.util.LogUtil.logger
 import io.swagger.annotations.ApiOperation
 import org.springframework.http.MediaType
@@ -13,7 +13,7 @@ import org.springframework.web.multipart.MultipartFile
 @RestController
 class UserController(
     private val userService: UserService,
-    private val fileUtil: FileUtil
+    private val fileUtil: FileUtility
 ) {
 
     @ApiOperation(value = "회원가입")
@@ -31,8 +31,8 @@ class UserController(
     @ApiOperation(value = "소셜 로그인", notes = "firstLogin == true라면 닉네임 설정 화면으로 이동")
     @PostMapping("/login/oauth")
     fun oauthLogin(@RequestBody oAuth: UserDto.OAuth): UserDto.OAuthResponse {
-        logger().info("oauth login provider : {}", oAuth.provider)
-        logger().info("access-token : {}", oAuth.accessToken)
+        logger().debug("oauth login provider : {}", oAuth.provider)
+        logger().debug("access-token : {}", oAuth.accessToken)
         return userService.oauthLogin(oAuth)
     }
 

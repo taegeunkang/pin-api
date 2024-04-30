@@ -2,7 +2,7 @@ package com.pin.pinapi.core.post
 
 import com.pin.pinapi.core.post.dto.PostDto
 import com.pin.pinapi.core.post.service.PostService
-import com.pin.pinapi.util.FileUtil
+import com.pin.pinapi.util.FileUtility
 import com.pin.pinapi.util.LogUtil.logger
 import io.swagger.annotations.ApiOperation
 import org.springframework.core.io.support.ResourceRegion
@@ -19,7 +19,7 @@ import org.springframework.web.multipart.MultipartFile
 @RestController
 class PostController(
     private val postService: PostService,
-    private val fileUtil: FileUtil
+    private val fileUtil: FileUtility
 ) {
 
     // 사용자 전체 포스트 조회

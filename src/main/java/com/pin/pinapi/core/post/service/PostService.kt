@@ -14,7 +14,7 @@ import com.pin.pinapi.core.user.exception.InvalidTokenException
 import com.pin.pinapi.core.user.exception.UserNotFoundException
 import com.pin.pinapi.core.user.repository.UserInfoRepository
 import com.pin.pinapi.core.user.repository.UserRepository
-import com.pin.pinapi.util.FileUtil
+import com.pin.pinapi.util.FileUtility
 import com.pin.pinapi.util.LogUtil.logger
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
@@ -38,7 +38,7 @@ class PostService(
     private val firebaseMessagingService: FirebaseMessagingService,
     private val notiRepository: NotiRepository,
     private val jwtUtil: JWTUtil,
-    private val fileUtil: FileUtil
+    private val fileUtil: FileUtility
 ) {
 
     // 미디어 컨텐츠(사진, 동영상)는 파일 명만 전달하고
