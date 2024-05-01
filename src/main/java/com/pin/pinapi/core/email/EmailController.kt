@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController
 class EmailController(
     private val emailService: EmailService
 ) {
+    // ? 물음표 제거 후 valid notblank 지운 후에 테스트 해보기
 
     @ApiOperation(value = "이메일 전송")
     @GetMapping("/send")
