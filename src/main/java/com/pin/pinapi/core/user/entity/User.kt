@@ -9,8 +9,7 @@ import javax.persistence.OneToOne
 @Entity
 class User(
     @Id
-    @Column(nullable = false, unique = true)
-    val emailAddress: String,
+    val email: String,
     @Column(nullable = true)
     var password: String? = null,
     @Column(nullable = false)

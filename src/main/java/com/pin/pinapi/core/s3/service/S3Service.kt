@@ -26,9 +26,9 @@ class S3Service(
 ) {
 
     fun initUpload(fileName: String): S3Dto.S3UploadInitDtoResponse {
-        val ext = fileName.substring(fileName.lastIndexOf(".") + 1)
+        val ext = getExt(fileName)
         val newFileName = UUID.randomUUID().toString() + "." + ext
-        val bucketName = if (ext == "png") imageBucketName else videoBucketName
+        val bucketName = getBucketName(ext)
 
         val createMultipartUploadRequest: CreateMultipartUploadRequest =
             CreateMultipartUploadRequest.builder()
@@ -45,8 +45,8 @@ class S3Service(
     }
 
     fun getUploadSignedUrl(s3UploadSignedUrlDto: S3Dto.S3UploadSignedUrlDto): S3Dto.S3UploadSignedUrlDtoResponse {
-        val ext = s3UploadSignedUrlDto.fileName.substring(s3UploadSignedUrlDto.fileName.lastIndexOf(".") + 1)
-        val bucketName = if (ext == "png") imageBucketName else videoBucketName
+        val ext = getExt(s3UploadSignedUrlDto.fileName)
+        val bucketName = getBucketName(ext)
 
         val uploadPartRequest: UploadPartRequest =
             UploadPartRequest.builder()
@@ -69,10 +69,10 @@ class S3Service(
 
     }
 
-    fun completeUpload(s3UploadCompleteDto: S3Dto.S3UploadCompleteDto): S3Dto.S3UploadResultDto {
+    fun completeUpload(s3UploadCompleteDto: S3Dto.S3UploadCompleteDto) {
 
-        val ext = s3UploadCompleteDto.fileName.substring(s3UploadCompleteDto.fileName.lastIndexOf(".") + 1)
-        val bucketName = if (ext == "png") imageBucketName else videoBucketName
+        val ext = getExt(s3UploadCompleteDto.fileName)
+        val bucketName = getBucketName(ext)
         val completeParts: ArrayList<CompletedPart> = ArrayList()
 
         for (partForm: S3Dto.S3UploadPartsDetailDto in s3UploadCompleteDto.parts) {
@@ -96,19 +96,18 @@ class S3Service(
             .uploadId(s3UploadCompleteDto.uploadId)
             .multipartUpload(completedMultipartUpload).build()
 
-        val completeMultipartUpload: CompleteMultipartUploadResponse =
-            s3Client.completeMultipartUpload(completeMultipartUploadRequest)
-
-        val objectKey: String = completeMultipartUpload.key()
-        val url: String = amazonS3Client.getUrl(bucketName, objectKey).toString()
-
-        return S3Dto.S3UploadResultDto(fileName, url)
+        s3Client.completeMultipartUpload(completeMultipartUploadRequest)
+//
+//        val objectKey: String = completeMultipartUpload.key()
+//        val url: String = amazonS3Client.getUrl(bucketName, objectKey).toString()
+//
+//        return S3Dto.S3UploadResultDto(fileName, url)
 
     }
 
     fun aboardUpload(s3UploadAbortDto: S3Dto.S3UploadAbortDto) {
-        val ext = s3UploadAbortDto.fileName.substring(s3UploadAbortDto.fileName.lastIndexOf(".") + 1)
-        val bucketName = if (ext == "png") imageBucketName else videoBucketName
+        val ext = getExt(s3UploadAbortDto.fileName)
+        val bucketName = getBucketName(ext)
 
         val abortMultipartUploadRequest = AbortMultipartUploadRequest.builder()
             .bucket(bucketName)
@@ -117,5 +116,18 @@ class S3Service(
             .build()
         s3Client.abortMultipartUpload(abortMultipartUploadRequest)
 
+    }
+
+    private fun getExt(fileName: String): String {
+        return fileName.substring(fileName.lastIndexOf(".") + 1)
+    }
+
+    private fun getBucketName(fileName: String): String {
+        return if (listOf(
+                "png",
+                "jpg",
+                "jpeg"
+            ).contains(fileName.substring(fileName.lastIndexOf(".") + 1))
+        ) imageBucketName else videoBucketName
     }
 }

@@ -7,16 +7,14 @@ import javax.persistence.*
 @Entity
 class Thumbnail(
 
-    @Column(nullable = false)
+    @Id
     val name: String,
-    
-    @OneToOne(fetch = FetchType.LAZY)
-    val media: Media,
     @Column(nullable = false)
     val size: Long,
+    @Column(nullable = false, length = 10)
+    val ext: String,
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "media_name")
+    val media: Media,
 
-    ) : BaseTimeEntity() {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Long = 0L
-}
+    ) : BaseTimeEntity()

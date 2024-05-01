@@ -8,11 +8,11 @@ import javax.persistence.*
 class Follow(
     @Id
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "from_user_id")
+    @JoinColumn(name = "from_user_email")
     val fromUser: User,
     @Id
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "to_user_id")
+    @JoinColumn(name = "to_user_email")
     val toUser: User,
 ) : BaseTimeEntity() {
 

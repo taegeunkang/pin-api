@@ -5,7 +5,6 @@ import com.pin.pinapi.core.post.entity.Media
 import com.pin.pinapi.core.post.entity.Post
 import com.pin.pinapi.core.post.entity.Thumbnail
 import com.pin.pinapi.core.user.entity.User
-import org.springframework.web.multipart.MultipartFile
 import java.time.LocalDateTime
 import java.util.*
 
@@ -16,7 +15,7 @@ class PostDto {
 
     data class ContentDtoResponse(
         val contentId: Long,
-        val userId: String,
+        val userEmail: String,
         val lat: Double,
         val lon: Double,
         val thumbnail: String,
@@ -25,7 +24,7 @@ class PostDto {
     )
 
     data class PostMyList(
-        val userId: String,
+        val userEmail: String,
         val page: Int,
         val size: Int
     )
@@ -43,10 +42,11 @@ class PostDto {
     data class PostResponse(
         val postId: Long,
         val nickname: String,
-        val userId: String,
+        val userEmail: String,
         val profileImage: String,
         val content: String,
         val mediaFiles: List<String>,
+        val thumbnailFiles: List<String>,
         val locationName: String,
         val liked: Boolean,
         val likesCount: Long,
@@ -57,8 +57,8 @@ class PostDto {
 
     data class PostCreateDto(
         val content: String,
-        val mediaFiles: List<MultipartFile>?,
-        val thumbnailFiles: List<MultipartFile>?,
+        val mediaFiles: List<MediaInfo>?,
+        val thumbnailFiles: List<MediaInfo>?,
         val lat: Double,
         val lon: Double,
         val locationName: String,
@@ -75,18 +75,18 @@ class PostDto {
         }
 
 
-        fun toThumbnail(media: Media, fileName: String, fileSize: Long): Thumbnail {
-            return Thumbnail(fileName, media, fileSize)
+        fun toThumbnail(fileName: String, fileSize: Long, ext: String, media: Media): Thumbnail {
+            return Thumbnail(fileName, fileSize, ext, media)
         }
     }
 
-    data class EditPostDto(val id: Long, val content: String)
+    data class MediaInfo(val fileName: String, val size: Long, val ext: String)
 
-    data class UploadMediaTestDto(val file: List<MultipartFile>, val id: String, val content: String)
+    data class EditPostDto(val postId: Long, val content: String)
 
     data class CommentCreateDto(val postId: Long, val replyId: Long?, val content: String) {
         fun toComment(post: Post, writer: User): Comment {
-            return Comment(content, post, replyId, writer)
+            return Comment(content, replyId, post, writer)
         }
     }
 

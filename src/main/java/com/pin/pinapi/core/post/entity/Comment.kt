@@ -6,14 +6,19 @@ import javax.persistence.*
 
 @Entity
 class Comment(
+
     @Column(nullable = false, length = 120)
     var content: String,
-    @ManyToOne(fetch = FetchType.LAZY)
-    val post: Post,
+
     @Column(nullable = true)
     val reply: Long?,
-    @ManyToOne
-    @JoinColumn(name = "user_id")
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "post_id")
+    val post: Post,
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_email")
     var writer: User?
 
 ) : BaseTimeEntity() {

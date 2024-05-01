@@ -2,24 +2,16 @@ package com.pin.pinapi.core.post
 
 import com.pin.pinapi.core.post.dto.PostDto
 import com.pin.pinapi.core.post.service.PostService
-import com.pin.pinapi.util.FileUtility
-import com.pin.pinapi.util.LogUtil.logger
 import io.swagger.annotations.ApiOperation
-import org.springframework.core.io.support.ResourceRegion
 import org.springframework.data.domain.PageRequest
-import org.springframework.http.HttpHeaders
-import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
-import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
-import org.springframework.web.multipart.MultipartFile
 
 
 @RequestMapping("/post")
 @RestController
 class PostController(
     private val postService: PostService,
-    private val fileUtil: FileUtility
 ) {
 
     // 사용자 전체 포스트 조회
@@ -27,49 +19,32 @@ class PostController(
     @ApiOperation(value = "사용자 전체 포스트 정보 조회")
     @PostMapping("/all")
     fun findAllPost(
-        @RequestParam userId: String,
+        @RequestParam userEmail: String,
         @RequestHeader("Authorization") token: String
     ): PostDto.PostMapAllResponse {
-        return postService.findAllMapPosts(userId, token)
+        return postService.findAllMapPosts(userEmail, token)
     }
 
 
     @ApiOperation(value = "포스트 생성")
-    @PostMapping("/create", consumes = [MediaType.MULTIPART_FORM_DATA_VALUE])
+    @PostMapping("/create", consumes = [MediaType.APPLICATION_JSON_VALUE])
     fun createPost(
-        @RequestParam("content") content: String,
-        @RequestPart("mediaFiles") mediaFiles: List<MultipartFile>?,
-        @RequestPart("thumbnailFiles") thumbnailFiles: List<MultipartFile>?,
-        @RequestParam("lat") lat: Double,
-        @RequestParam("lon") lon: Double,
-        @RequestParam("locationName") locationName: String,
-        @RequestParam("isPrivate") isPrivate: Boolean,
-        @RequestParam("mention") mention: List<String>?,
+        @RequestBody postCreateDto: PostDto.PostCreateDto,
         @RequestHeader("Authorization") token: String
     ) {
-        val post: PostDto.PostCreateDto = PostDto.PostCreateDto(
-            content,
-            mediaFiles,
-            thumbnailFiles,
-            lat,
-            lon,
-            locationName,
-            isPrivate,
-            mention
-        )
-        postService.create(post, token)
+        postService.create(postCreateDto, token)
     }
-
-    @ApiOperation(value = "동영상 저장")
-    @PostMapping("/v", consumes = [MediaType.MULTIPART_FORM_DATA_VALUE])
-    fun videoSave(@RequestParam("video") video: MultipartFile): String {
-        return fileUtil.fileSave(video, "mov");
-    }
+//   deprecated for moving s3
+//    @ApiOperation(value = "동영상 저장")
+//    @PostMapping("/v", consumes = [MediaType.MULTIPART_FORM_DATA_VALUE])
+//    fun videoSave(@RequestParam("video") video: MultipartFile): String {
+//        return fileUtil.fileSave(video, "mov");
+//    }
 
     @ApiOperation(value = "포스트 삭제")
     @DeleteMapping("/delete")
-    fun deletePost(@RequestHeader("Authorization") token: String, @RequestParam id: Long) {
-        postService.deletePost(token, id)
+    fun deletePost(@RequestHeader("Authorization") token: String, @RequestParam postId: Long) {
+        postService.deletePost(token, postId)
     }
 
     @ApiOperation(value = "포스트 수정")
@@ -80,38 +55,41 @@ class PostController(
 
     @ApiOperation(value = "특정 포스트 세부 정보 조회")
     @PostMapping("/find")
-    fun findPost(@RequestParam id: Long, @RequestHeader("Authorization") token: String): PostDto.PostResponse {
-        return postService.findPost(id, token)
+    fun findPost(@RequestParam postId: Long, @RequestHeader("Authorization") token: String): PostDto.PostResponse {
+        return postService.findPost(postId, token)
     }
 
     @PostMapping("/find/all")
     fun findAllPost(
-        @RequestParam userId: String,
+        @RequestParam userEmail: String,
         @RequestParam page: Int,
         @RequestParam size: Int,
         @RequestHeader("Authorization") token: String
     ): List<PostDto.PostResponse> {
-        return postService.findAllPost(userId, token, page, size)
+        return postService.findAllPost(userEmail, token, page, size)
     }
 
-    @ApiOperation(value = "비디오")
-    @GetMapping("/streaming")
-    fun streaming(
-        @RequestParam watch: String,
-        @RequestHeader headers: HttpHeaders
-    ): ResponseEntity<ResourceRegion> {
-        val video = fileUtil.getResourceRegion(watch, headers)
-        return ResponseEntity.status(HttpStatus.PARTIAL_CONTENT).contentType(MediaType.parseMediaType("video/mp4"))
-            .body(video)
-    }
-
-    @ApiOperation(value = "이미지")
-    @GetMapping("/image", produces = [MediaType.IMAGE_PNG_VALUE])
-    fun getImage(@RequestParam watch: String): ByteArray {
-        logger().info("이미지 조회 : {} ", watch)
-        return postService.getImage(watch)
-    }
-
+    /**
+     * as moving to s3, this endpoint deprecated
+     * */
+//
+//@ApiOperation(value = "비디오")
+//@GetMapping("/streaming")
+//fun streaming(
+//    @RequestParam watch: String,
+//    @RequestHeader headers: HttpHeaders
+//): ResponseEntity<ResourceRegion> {
+//    val video = fileUtil.getResourceRegion(watch, headers)
+//    return ResponseEntity.status(HttpStatus.PARTIAL_CONTENT).contentType(MediaType.parseMediaType("video/mp4"))
+//        .body(video)
+//}
+//
+//    @ApiOperation(value = "이미지")
+//    @GetMapping("/image", produces = [MediaType.IMAGE_PNG_VALUE])
+//    fun getImage(@RequestParam watch: String): ByteArray {
+//        logger().info("이미지 조회 : {} ", watch)
+//        return postService.getImage(watch)
+//    }
 
     @ApiOperation("엄지척")
     @PostMapping("/like")

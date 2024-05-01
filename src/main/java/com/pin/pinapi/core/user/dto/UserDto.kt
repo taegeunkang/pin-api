@@ -53,13 +53,13 @@ class UserDto {
 
     data class SearchDto(val word: String, val page: Int, val size: Int)
 
-    data class SearchResponseDto(val userId: String, val nickname: String, val profileImg: String)
+    data class SearchResponseDto(val userEmail: String, val nickname: String, val profileImg: String)
 
     data class ProfileInitDto(val nickname: String)
 
 
     data class profileResponseDto(
-        val userId: String,
+        val userEmail: String,
         val nickname: String,
         val profileImg: String,
         val backgroundImg: String,

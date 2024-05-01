@@ -23,13 +23,13 @@ class S3Controller(
     }
 
     @PostMapping("/complete")
-    fun completeUpload(@RequestBody s3UploadCompleteDto: S3Dto.S3UploadCompleteDto): S3Dto.S3UploadResultDto {
-        return s3Service.completeUpload(s3UploadCompleteDto)
+    fun completeUpload(@RequestBody s3UploadCompleteDto: S3Dto.S3UploadCompleteDto) {
+        s3Service.completeUpload(s3UploadCompleteDto)
     }
 
     @PostMapping("/abort")
     fun abortUpload(@RequestBody s3UploadAbortDto: S3Dto.S3UploadAbortDto) {
         s3Service.aboardUpload(s3UploadAbortDto)
-        
+
     }
 }
