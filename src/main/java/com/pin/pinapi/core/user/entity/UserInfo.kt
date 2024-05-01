@@ -5,7 +5,7 @@ import javax.persistence.*
 @Entity
 class UserInfo(
     @Id
-    val userId: String,
+    val userEmail: String,
     @Column(nullable = false, unique = true)
     var nickName: String,
     @Column(nullable = false)
@@ -17,8 +17,8 @@ class UserInfo(
 
     ) {
 
-    @MapsId("userId")
+    @MapsId("userEmail")
     @OneToOne(cascade = [CascadeType.ALL])
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "user_email")
     val user: User? = null
 }

@@ -14,13 +14,11 @@ import com.pin.pinapi.core.user.exception.InvalidTokenException
 import com.pin.pinapi.core.user.exception.UserNotFoundException
 import com.pin.pinapi.core.user.repository.UserInfoRepository
 import com.pin.pinapi.core.user.repository.UserRepository
-import com.pin.pinapi.util.FileUtil
 import com.pin.pinapi.util.LogUtil.logger
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import java.io.FileNotFoundException
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 import java.util.*
@@ -38,7 +36,7 @@ class PostService(
     private val firebaseMessagingService: FirebaseMessagingService,
     private val notiRepository: NotiRepository,
     private val jwtUtil: JWTUtil,
-    private val fileUtil: FileUtil
+//    private val fileUtil: FileUtility
 ) {
 
     // 미디어 컨텐츠(사진, 동영상)는 파일 명만 전달하고
@@ -54,25 +52,28 @@ class PostService(
 
         val result: MutableList<PostDto.ContentDtoResponse> = mutableListOf()
         val myContents: List<Post> = postRepository.findAllByUser(User(userId))
-        val currentTime: LocalDateTime = LocalDateTime.now()
+
 
         val followContents: List<Post> =
             postRepository.findAllByUserAndFollowBeforeYesterday(user, LocalDateTime.now().minusHours(24))
         val contents = myContents + followContents
         if (contents.isEmpty()) throw ContentNotFoundException()
 
+        val extList = listOf("png", "jpg", "jpeg")
+
         for (c in contents) {
             var fileName = ""
             val media = mediaRepository.findFirstByPost(c)
             fileName = if (media != null) media.name else userInfo.profileImg
             // 첫번째 미디어가 동영상이면 썸네일 반환
-            if (media != null && media.ext == "mp4") {
-                val thumbnail = thumbnailRepository.findByMedia(media) ?: throw ContentNotFoundException()
-                fileName = thumbnail.name
+            if (media != null && !extList.contains(media.ext)) {
+                val thumbnail = thumbnailRepository.findByMedia(media)
+                if (thumbnail != null)
+                    fileName = thumbnail.name
             }
             val date: Date = Date.from(c.createdDate!!.toInstant(ZoneOffset.ofHours(9)))
             val detail = findPost(c.id, token)
-            result.add(PostDto.ContentDtoResponse(c.id, c.user.emailAddress, c.lat, c.lon, fileName, date, detail))
+            result.add(PostDto.ContentDtoResponse(c.id, c.user.email, c.lat, c.lon, fileName, date, detail))
         }
 
         return PostDto.PostMapAllResponse(result)
@@ -85,7 +86,7 @@ class PostService(
         val myList: MutableList<PostDto.PostMyListResponse> = mutableListOf()
         val posts: Page<Post> =
             postRepository.findAllByUserOrderByCreatedDateDesc(
-                User(postMyList.userId),
+                User(postMyList.userEmail),
                 PageRequest.of(postMyList.page, postMyList.size)
             )
         if (posts.isEmpty) throw ContentNotFoundException()
@@ -117,13 +118,23 @@ class PostService(
         val emailAddress = jwtUtil.getSubject(token) ?: throw InvalidTokenException()
         val user: User = userRepository.findById(emailAddress).orElseThrow { throw UserNotFoundException() }
         val content: Post = postRepository.findById(postId).orElseThrow { throw ContentNotFoundException() }
-        val userInfo = userInfoRepository.findByUser(User(content.user.emailAddress)) ?: throw UserNotFoundException()
+        val userInfo = userInfoRepository.findByUser(User(content.user.email)) ?: throw UserNotFoundException()
         val medias: List<Media>? = mediaRepository.findAllByPost(content)
 
-        var media1 = mutableListOf<String>()
+        val mediaList = mutableListOf<String>()
+        val thumbnailList = mutableListOf<String>()
+        val extList = listOf("png", "jpg", "jpeg")
+
         if (medias != null) {
             for (media in medias) {
-                media1.add(media.name)
+                mediaList.add(media.name)
+
+                if (!extList.contains(media.ext)) {
+                    val thumbnail = thumbnailRepository.findByMedia(media)
+                    if (thumbnail != null)
+                        thumbnailList.add(thumbnail.name)
+                }
+
             }
         }
         val date: Date = Date.from(content.createdDate!!.toInstant(ZoneOffset.ofHours(0)))
@@ -139,13 +150,13 @@ class PostService(
         val commentCount: Long = commentRepository.countCommentByPostAndReplyIsNull(content)
 
         val mentionResult = mutableListOf<PostDto.ProfileSummaryResponseDto>()
-        val mentionList: List<String> = mentionRepository.findAllByPost(content).map { it.user.emailAddress }
+        val mentionList: List<String> = mentionRepository.findAllByPost(content).map { it.user.email }
 
         for (mm in mentionList) {
             val mentionUserInfo: UserInfo = userInfoRepository.findByUser(User(mm)) ?: throw UserNotFoundException()
             mentionResult.add(
                 PostDto.ProfileSummaryResponseDto(
-                    mentionUserInfo.userId,
+                    mentionUserInfo.userEmail,
                     mentionUserInfo.nickName,
                     mentionUserInfo.profileImg
                 )
@@ -156,10 +167,11 @@ class PostService(
         return PostDto.PostResponse(
             content.id,
             userInfo.nickName,
-            content.user.emailAddress,
+            content.user.email,
             userInfo.profileImg,
             content.content,
-            media1,
+            mediaList,
+            thumbnailList,
             content.locationName,
             isLikedBefore,
             thumbsUpCount,
@@ -181,15 +193,25 @@ class PostService(
             postRepository.findAllByUserOrderByCreatedDateDesc(User(userId), PageRequest.of(page, size))
         val userInfo = userInfoRepository.findByUser(User(userId)) ?: throw UserNotFoundException()
 
-        var result = mutableListOf<PostDto.PostResponse>()
+        val result = mutableListOf<PostDto.PostResponse>()
+
+        val extList = listOf("png", "jpg", "jpeg")
+
         for (c in contents) {
 
             val medias: List<Media>? = mediaRepository.findAllByPost(c)
-            var media1 = mutableListOf<String>()
+            val mediaList = mutableListOf<String>()
+            val thumbnailList = mutableListOf<String>()
 
             if (medias != null) {
                 for (media in medias) {
-                    media1.add(media.name)
+                    mediaList.add(media.name)
+
+                    if (!extList.contains(media.ext)) {
+                        val thumbnail = thumbnailRepository.findByMedia(media)
+                        if (thumbnail != null)
+                            thumbnailList.add(thumbnail.name)
+                    }
                 }
             }
 
@@ -207,13 +229,13 @@ class PostService(
             val commentCount: Long = commentRepository.countCommentByPostAndReplyIsNull(c)
             // 멘션
             val mentionResult = mutableListOf<PostDto.ProfileSummaryResponseDto>()
-            val mentionList: List<String> = mentionRepository.findAllByPost(c).map { it.user.emailAddress }
+            val mentionList: List<String> = mentionRepository.findAllByPost(c).map { it.user.email }
 
             for (mm in mentionList) {
                 val mentionUserInfo: UserInfo = userInfoRepository.findByUser(User(mm)) ?: throw UserNotFoundException()
                 mentionResult.add(
                     PostDto.ProfileSummaryResponseDto(
-                        mentionUserInfo.userId,
+                        mentionUserInfo.userEmail,
                         mentionUserInfo.nickName,
                         mentionUserInfo.profileImg
                     )
@@ -224,10 +246,11 @@ class PostService(
                 PostDto.PostResponse(
                     c.id,
                     userInfo.nickName,
-                    user.emailAddress,
+                    user.email,
                     userInfo.profileImg,
                     c.content,
-                    media1,
+                    mediaList,
+                    thumbnailList,
                     c.locationName,
                     isLikedBefore,
                     thumbsUpCount,
@@ -243,9 +266,6 @@ class PostService(
 
     }
 
-    // 사진, 동영상 테이블 따로 두지만
-    // 로컬 경로는 한 폴더에 넣고 파일 명으로 접근
-    // 썸네일 테이블 따로 구성
     @Transactional
     fun create(post: PostDto.PostCreateDto, token: String) {
         val subject = jwtUtil.getSubject(token) ?: throw InvalidTokenException()
@@ -253,24 +273,22 @@ class PostService(
         val userInfo: UserInfo = userInfoRepository.findByUser(user)!!
         val content: Post = post.toPost(user)
         val contentSaved: Post = postRepository.save(content)
-        var videoCnt = 0
 
+        var videoCnt = 0
         if (post.mediaFiles != null) {
             for (media in post.mediaFiles) {
                 // 컨텐츠 타입
-                val ext: String = if (media.contentType?.startsWith("video") == true) "mp4" else "png"
-                val name: String = fileUtil.fileSave(media, ext)
+                val ext: String = media.ext
+                val name: String = media.fileName
                 val size: Long = media.size
                 val m: Media = post.toMedia(name, size, ext, contentSaved)
-                val savedMedia = mediaRepository.save(m)
-                // 비디오라면 썸네일도 저장
-                if (ext.equals("mp4")) {
-                    val thumbnail = post.thumbnailFiles!!.get(videoCnt)
-                    val tName = fileUtil.fileSave(thumbnail, "png")
-                    val tSize = thumbnail.size
-                    val t = post.toThumbnail(savedMedia, tName, tSize)
-                    thumbnailRepository.save(t)
-                    videoCnt++
+                mediaRepository.save(m)
+
+                if (ext == "mp4") {
+                    val thumbnailFile = post.thumbnailFiles!![videoCnt]
+                    val thumbnail = post.toThumbnail(thumbnailFile.fileName, thumbnailFile.size, thumbnailFile.ext, m)
+                    thumbnailRepository.save(thumbnail)
+                    videoCnt += 1
                 }
 
             }
@@ -296,12 +314,9 @@ class PostService(
 
     }
 
-
-    // 컨텐츠 내용 수정
-    // id : 컨텐츠 id
     @Transactional
     fun editPostContent(editPostDto: PostDto.EditPostDto) {
-        var content: Post = postRepository.findById(editPostDto.id).get()
+        val content: Post = postRepository.findById(editPostDto.postId).get()
         content.content = editPostDto.content
         content.modifiedDate = LocalDateTime.now()
     }
@@ -310,7 +325,7 @@ class PostService(
     fun deletePost(token: String, id: Long) {
         val emailFromToken: String = jwtUtil.getSubject(token)
         val user: User = userRepository.findById(emailFromToken).orElseThrow { throw UserNotFoundException() }
-        postRepository.deleteByIdAndUser(id, User(user.emailAddress))
+        postRepository.deleteByIdAndUser(id, User(user.email))
     }
 
     @Transactional
@@ -368,7 +383,7 @@ class PostService(
 
         // 토큰의 주인과 댓글의 작성자가 같다면 삭제
         val comment = commentRepository.findCommentById(replyId) ?: throw ContentNotFoundException()
-        if (comment.writer!!.emailAddress != user.emailAddress) throw NotPermittedException() // exception 핸들링 예정
+        if (comment.writer!!.email != user.email) throw NotPermittedException() // exception 핸들링 예정
         commentRepository.deleteByReply(replyId)
         commentRepository.deleteById(replyId)
 
@@ -392,7 +407,7 @@ class PostService(
                     c.reply,
                     c.content,
                     u!!.nickName,
-                    u.user!!.emailAddress,
+                    u.user!!.email,
                     u.profileImg,
                     cnt,
                     Date.from(c.createdDate!!.toInstant(ZoneOffset.ofHours(0)))
@@ -424,7 +439,7 @@ class PostService(
                     c.reply,
                     c.content,
                     u!!.nickName,
-                    u.userId,
+                    u.userEmail,
                     u.profileImg,
                     Date.from(c.createdDate!!.toInstant(ZoneOffset.ofHours(0)))
                 )
@@ -434,17 +449,17 @@ class PostService(
         return ansList
 
     }
-
-    @Transactional(readOnly = true)
-    fun getImage(fileName: String): ByteArray {
-        if (fileName.substring(fileName.length - 3) == "png") {
-            return fileUtil.getImage(fileName)
-        }
-        val media = mediaRepository.findByName(fileName) ?: throw FileNotFoundException()
-        val thumbnail = thumbnailRepository.findByMedia(media) ?: throw FileNotFoundException()
-        return fileUtil.getImage(thumbnail.name)
-
-    }
+//  deprecated for moving s3
+//    @Transactional(readOnly = true)
+//    fun getImage(fileName: String): ByteArray {
+//        if (fileName.substring(fileName.length - 3) == "png") {
+//            return fileUtil.getImage(fileName)
+//        }
+//        val media = mediaRepository.findByName(fileName) ?: throw FileNotFoundException()
+//        val thumbnail = thumbnailRepository.findByMedia(media) ?: throw FileNotFoundException()
+//        return fileUtil.getImage(thumbnail.name)
+//
+//    }
 
 
     @Transactional
@@ -459,7 +474,7 @@ class PostService(
             val postResponse = findPost(notification.post.id, token)
             a.add(
                 PostDto.NotiResponseDto(
-                    notification.user.emailAddress,
+                    notification.user.email,
                     notification.message,
                     notification.createdDate!!,
                     notification.pressed,
@@ -483,7 +498,7 @@ class PostService(
 
 
     fun sendNotification(title: String, message: String, token: String?, post: Post, user: User) {
-        logger().info("알림 보냄  to ${user.emailAddress}")
+        logger().info("알림 보냄  to ${user.email}")
         try {
             firebaseMessagingService.sendMessage(
                 token!!,

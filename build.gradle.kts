@@ -34,12 +34,15 @@ dependencies {
     implementation("io.jsonwebtoken:jjwt:0.9.1")
     implementation("io.springfox:springfox-swagger2:2.9.2")
     implementation("io.springfox:springfox-swagger-ui:2.9.2")
-//    implementation group: "javax.xml.bind", name: "jaxb-api", version: "2.3.1"
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+    implementation("org.springframework.cloud:spring-cloud-starter-aws:2.2.6.RELEASE")
+    implementation(platform("software.amazon.awssdk:bom:2.17.53"))
+    implementation("software.amazon.awssdk:s3")
     testImplementation("org.springframework.security:spring-security-test")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
+
 }
 
 allOpen { // 추가적으로 열어줄 allOpen

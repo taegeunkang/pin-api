@@ -24,12 +24,10 @@ public class JWTUtil {
     // 리프레시 토큰 만기일 30일
     private long refreshTokenExpire;
 
-
     public JWTUtil(String secret, long expire, long refreshTokenExpire) {
         this.secret = secret;
         this.expire = expire;
         this.refreshTokenExpire = refreshTokenExpire;
-        System.out.println("secret");
     }
 
     //토큰 생성

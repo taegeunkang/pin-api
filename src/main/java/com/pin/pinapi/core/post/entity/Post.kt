@@ -18,6 +18,7 @@ class Post(
     val isPrivate: Boolean = false,
 
     @ManyToOne
+    @JoinColumn(name = "user_email")
     val user: User,
 
     ) : BaseTimeEntity() {

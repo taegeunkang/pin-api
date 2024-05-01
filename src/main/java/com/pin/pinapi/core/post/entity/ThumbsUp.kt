@@ -10,9 +10,11 @@ import javax.persistence.*
 class ThumbsUp(
     @Id
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "post_id")
     val post: Post,
     @Id
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_email")
     val user: User
 
 ) : BaseTimeEntity()

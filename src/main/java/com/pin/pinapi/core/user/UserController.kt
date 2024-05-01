@@ -2,18 +2,17 @@ package com.pin.pinapi.core.user
 
 import com.pin.pinapi.core.user.dto.UserDto
 import com.pin.pinapi.core.user.service.UserService
-import com.pin.pinapi.util.FileUtil
+import com.pin.pinapi.util.FileUtility
 import com.pin.pinapi.util.LogUtil.logger
 import io.swagger.annotations.ApiOperation
 import org.springframework.http.MediaType
 import org.springframework.web.bind.annotation.*
-import org.springframework.web.multipart.MultipartFile
 
 @RequestMapping(value = ["/user"], produces = [MediaType.APPLICATION_JSON_VALUE])
 @RestController
 class UserController(
     private val userService: UserService,
-    private val fileUtil: FileUtil
+    private val fileUtil: FileUtility
 ) {
 
     @ApiOperation(value = "회원가입")
@@ -31,8 +30,8 @@ class UserController(
     @ApiOperation(value = "소셜 로그인", notes = "firstLogin == true라면 닉네임 설정 화면으로 이동")
     @PostMapping("/login/oauth")
     fun oauthLogin(@RequestBody oAuth: UserDto.OAuth): UserDto.OAuthResponse {
-        logger().info("oauth login provider : {}", oAuth.provider)
-        logger().info("access-token : {}", oAuth.accessToken)
+        logger().debug("oauth login provider : {}", oAuth.provider)
+        logger().debug("access-token : {}", oAuth.accessToken)
         return userService.oauthLogin(oAuth)
     }
 
@@ -129,23 +128,23 @@ class UserController(
     @ApiOperation("사용자 프로필 조회")
     @PostMapping("/profile/info")
     fun getUserInfo(
-        @RequestParam("userId") userId: String,
+        @RequestParam("userEmail") userEmail: String,
         @RequestHeader("Authorization") token: String
     ): UserDto.profileResponseDto {
-        return userService.getUserProfile(userId, token)
+        return userService.getUserProfile(userEmail, token)
     }
-
-    @ApiOperation(value = "프로필 이미지 조회")
-    @GetMapping("/profile/image", produces = [MediaType.IMAGE_PNG_VALUE])
-    fun getImage(@RequestParam watch: String): ByteArray {
-        logger().info("프로필 이미지 조회 : {} ", watch)
-        return fileUtil.getImage(watch)
-    }
+//    deprecated for moving s3
+//    @ApiOperation(value = "프로필 이미지 조회")
+//    @GetMapping("/profile/image", produces = [MediaType.IMAGE_PNG_VALUE])
+//    fun getImage(@RequestParam watch: String): ByteArray {
+//        logger().info("프로필 이미지 조회 : {} ", watch)
+//        return fileUtil.getImage(watch)
+//    }
 
     @ApiOperation(value = "프로필 이미지 변경")
     @PostMapping("/profile/update/profileImage")
     fun updateProfileImage(
-        @RequestPart("profileImage") profileImage: MultipartFile?,
+        @RequestParam("profileImage") profileImage: String,
         @RequestHeader("Authorization") token: String
     ) {
         userService.updateProfileImage(profileImage, token)
@@ -154,7 +153,7 @@ class UserController(
     @ApiOperation(value = "프로필 배경 변경")
     @PostMapping("/profile/update/backgroundImage")
     fun updateBackgroundImage(
-        @RequestPart("backgroundImage") backgroundImage: MultipartFile?,
+        @RequestParam("backgroundImage") backgroundImage: String,
         @RequestHeader("Authorization") token: String
     ) {
         userService.updateBackgroundImage(backgroundImage, token)
