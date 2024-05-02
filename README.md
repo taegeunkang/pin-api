@@ -29,7 +29,7 @@
 
 ### 운영 환경
 
-![앱 이미지](./readme_contents/architecture.png)
+![앱 이미지](https://github.com/taegeunkang/pin-api/assets/53002135/930709d1-f60f-4315-a5b7-8b0f33202406)
 
 ### 프로젝트 구조
 
