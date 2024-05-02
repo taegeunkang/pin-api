@@ -19,11 +19,17 @@
 
 ### 개발환경
 
-- react-native 0.71.7
 - spring-boot 2.7.7
 - ubuntu 20.04.6 LTS
-- nginx 1.18.0
 - mysql 8.0.36
+
+### ERD
+
+![erd](./readme_contents/diagram.png)
+
+### 운영 환경
+
+![앱 이미지](./readme_contents/architecture.png)
 
 ### 프로젝트 구조
 
@@ -48,6 +54,11 @@
 │   │   ├── exception
 │   │   ├── repository
 │   │   └── service
+│   ├── s3
+│   │   ├── S3Controller.kt
+│   │   ├── config
+│   │   ├── dto
+│   │   └── service
 │   ├── security
 │   │   ├── CORSConfig.kt
 │   │   ├── SecurityConfig.kt
@@ -65,7 +76,8 @@
 │   ├── SwaggerConfig.kt
 │   └── SwaggerRedirector.kt
 └── util
-    ├── FileUtil.kt
+    ├── FileUtility.kt
+    ├── LocalFileUtility.kt
     └── LogUtil.kt
 
 ```
@@ -99,14 +111,3 @@
 | AlreadyInitUserException       | 400  | U14  | user-info exists                        |
 | NotInitUserException           | 400  | U15  | user not init                           |
 
-### ERD
-
-![erd](./readme_contents/diagram.png)
-
-### 운영 환경
-
-![앱 이미지](./readme_contents/architecture.png)
-
-### API 명세
-
-[API명세](https://dev-dean.com/api-docs)
