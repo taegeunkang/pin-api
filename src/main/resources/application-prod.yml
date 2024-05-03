@@ -1,0 +1,76 @@
+spring:
+  config:
+    activate:
+      on-profile: prod
+  servlet:
+    multipart:
+      max-file-size: 500MB
+      max-request-size: 500MB
+  datasource:
+    url: ${MYSQL_DATA_SOURCE}
+    username: ${MYSQL_USERNAME}
+    password: ${MYSQL_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL5InnoDBDialect
+  mail:
+    default-encoding: utf-8
+    host: smtp.gmail.com
+    port: 587
+    username: ${JAVA_MAIL_SENDER_USERNAME}
+    password: ${JAVA_MAIL_SENDER_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          starttls:
+            enable: true
+          auth: true
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${OAUTH_GOOGLE_CLIENT_ID}
+            client-secret: ${OAUTH_GOOGLE_CLIENT_SECRET}
+            scope:
+              - email
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
+logging:
+  level:
+    org:
+      springframework:
+        beans: INFO
+media:
+  save:
+    path: "/files"
+  upload:
+    max: 524288000L
+jwt:
+  secret: ${JWT_SECRET}
+  expire: ${JWT_EXPIRE}
+  refreshTokenExpire: ${JWT_REFRESH_TOKEN_EXPIRE}
+
+cloud:
+  aws:
+    stack:
+      auto: false
+    region:
+      static: ${AWS_REGION}
+    credentials:
+      access-key: ${AWS_CREDENTIALS_ACCESS_KEY}
+      secret-key: ${AWS_CREDENTIALS_SECRET_KEY}
+    s3:
+      bucket:
+        image: ${AWS_S3_BUCKET_IMAGE_NAME}
+        video: ${AWS_S3_BUCKET_VIDEO_NAME}
+
+firebase:
+  key:
+    path: ${FIREBASE_SERVICE_KEY_PATH}
