@@ -1,0 +1,34 @@
+name: Deploy to Dev
+
+on:
+  push:
+    tags:
+      - 'prod-[0-9]+.[0-9]+.[0-9]+'
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+
+      - name: Make .env
+        run: |
+          touch .env
+          echo "${{ secrets.ENV_VARS }}" > .env
+
+      - name: make deployment package
+        run: |
+          zip -r deploy.zip .
+          
+      - name: Beanstalk Deploy
+        uses: einaregilsson/beanstalk-deploy@v21
+        with:
+          aws_access_key: ${{ secrets.AWS_ACCESS_KEY}}
+          aws_secret_key: ${{ secrets.AWS_SECRET_KEY}}
+          application_name: pin-elb
+          environment_name: pin-elb-env
+          version_label: github-action-${{steps.current-time.outputs.formattedTime}}
+          region: ap-northeast-2
+          deployment_package: ./deploy.zip
+
