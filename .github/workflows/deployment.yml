@@ -21,8 +21,6 @@ jobs:
         run: |
           mkdir src/main/resources/firebase
           touch src/main/resources/firebase/firebase-key.json
-          echo "secret test"
-          echo $FIREBASE_SERVICE_KEY
           echo $FIREBASE_SERVICE_KEY > src/main/resources/firebase/firebase-key.json
           
       - name: aws ecr configure
@@ -34,8 +32,7 @@ jobs:
           aws-access-key-id: $AWS_ACCESS_KEY
           aws-secret-access-key: $AWS_SECRET_KEY
           aws-region: ap-northeast-2
-          role-to-assume: arn:aws:iam::702427404622:user/pin-deploy
-
+         
       - name: login to ecr
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
