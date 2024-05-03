@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       id-token: write
-      contents: read
+      contents: write
 
     steps:
       - name: checkout
@@ -22,7 +22,7 @@ jobs:
           echo "${{secrets.FIREBASE_SERVICE_KEY}}" > src/main/resources/firebase/firebase-key.json
 
       - name: aws ecr configure
-        uses: aws-actions/configure-aws-credentials@master
+        uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{secrets.AWS_ACCESS_KEY}}
           aws-secret-access-key: ${{secrets.AWS_SECRET_KEY}}
