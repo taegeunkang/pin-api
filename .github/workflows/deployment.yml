@@ -21,6 +21,7 @@ jobs:
         run: |
           mkdir src/main/resources/firebase
           touch src/main/resources/firebase/firebase-key.json
+          echo "secret test"
           echo "$FIREBASE_SERVICE_KEY"
           echo "$FIREBASE_SERVICE_KEY" > src/main/resources/firebase/firebase-key.json
           
