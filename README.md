@@ -111,3 +111,4 @@
 | AlreadyInitUserException       | 400  | U14  | user-info exists                        |
 | NotInitUserException           | 400  | U15  | user not init                           |
 
+ 
