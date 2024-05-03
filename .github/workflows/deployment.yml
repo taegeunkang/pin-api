@@ -34,6 +34,7 @@ jobs:
           aws-access-key-id: $AWS_ACCESS_KEY
           aws-secret-access-key: $AWS_SECRET_KEY
           aws-region: ap-northeast-2
+          role-to-assume: arn:aws:iam::702427404622:user/pin-deploy
 
       - name: login to ecr
         id: login-ecr
