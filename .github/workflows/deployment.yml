@@ -37,14 +37,6 @@ jobs:
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
-
-      - name: make deployment package
-        run: |
-          mkdir app
-          mv docker-compose.yml ./app/docker-compose.yml
-          mv .env ./.env
-          zip -r deploy.zip ./app
-
       - name: Get current time
         uses: josStorer/get-current-time@v2
         id: current-time
@@ -57,9 +49,9 @@ jobs:
         with:
           aws_access_key: ${{ secrets.AWS_ACCESS_KEY }}
           aws_secret_key: ${{ secrets.AWS_SECRET_KEY }}
-          application_name: pin-elb
-          environment_name: pin-elb-env
+          application_name: pin-app
+          environment_name: Pin-app-env
           version_label: github-action-${{steps.current-time.outputs.formattedTime}}
           region: ap-northeast-2
-          deployment_package: ./deploy.zip
+          deployment_package: ./docker-compose.yml
 
