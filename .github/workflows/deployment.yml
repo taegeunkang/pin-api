@@ -12,26 +12,22 @@ jobs:
       - name: checkout
         uses: actions/checkout@v3
 
-      - name: Make .env
-        run: |
-          touch .env
-          echo "${{ secrets.ENV_VARS }}" > .env
       - name: Make firebase service key
         run: |
           touch src/main/resources/firebase/firebase-key.json
           echo "${{secrets.FIREBASE_SERVICE_KEY}}" > src/main/resources/firebase/firebase-key.json
-      
+
       - name: aws ecr configure
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{secrets.AWS_ACCESS_KEY}}
           aws-secret-access-key: ${{secrets.AWS_SECRET_KEY}}
           aws-region: ap-northeast-2
-          
+
       - name: login to ecr
         id: login-ecr
         uses: awa-actions/amazon-ecr-login@v2
-        
+
       - name: build and push to ecr
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
@@ -41,21 +37,21 @@ jobs:
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
-            
+
       - name: make deployment package
         run: |
           mkdir app
           mv docker-compose.yml ./app/docker-compose.yml
           mv .env ./.env
           zip -r deploy.zip ./app
-          
+
       - name: Get current time
         uses: josStorer/get-current-time@v2
         id: current-time
         with:
           format: YYYYMMDD-HH
           utcOffset: "+09:00"
-          
+
       - name: Beanstalk Deploy
         uses: einaregilsson/beanstalk-deploy@v21
         with:
