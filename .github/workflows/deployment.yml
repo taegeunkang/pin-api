@@ -44,6 +44,7 @@ jobs:
         with:
           access_key: ${AWS_ACCESS_KEY}
           secret_access_key: ${AWS_SECRET_KEY}
+          region: ap-northeast-2
 
       - name: build and push to ecr
         env:
