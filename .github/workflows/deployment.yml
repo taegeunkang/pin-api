@@ -7,25 +7,32 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
 
     steps:
       - name: checkout
         uses: actions/checkout@v3
 
       - name: Make firebase service key
+        env:
+          FIREBASE_SERVICE_KEY: ${{secrets.FIREBASE_SERVICE_KEY}}
         run: |
           mkdir src/main/resources/firebase
           touch src/main/resources/firebase/firebase-key.json
-          echo "${{secrets.FIREBASE_SERVICE_KEY}}" > src/main/resources/firebase/firebase-key.json
-
-      - name: aws ecr configure
-        uses: aws-actions/configure-aws-credentials@master
-        with:
-          aws-access-key-id: ${{secrets.AWS_ACCESS_KEY}}
-          aws-secret-access-key: ${{secrets.AWS_SECRET_KEY}}
-          aws-region: ap-northeast-2
+          echo $FIREBASE_SERVICE_KEY > src/main/resources/firebase/firebase-key.json
           
-
+      - name: aws ecr configure
+        uses: aws-actions/configure-aws-credentials@v4
+        env:
+          AWS_ACCESS_KEY: ${{secrets.AWS_ACCESS_KEY}}
+          AWS_SECRET_KEY: ${{secrets.AWS_SECRET_KEY}}
+        with:
+          aws-access-key-id: $AWS_ACCESS_KEY
+          aws-secret-access-key: $AWS_SECRET_KEY
+          aws-region: ap-northeast-2
+         
       - name: login to ecr
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
@@ -46,14 +53,14 @@ jobs:
           format: YYYYMMDD-HH
           utcOffset: "+09:00"
 
-      - name: Beanstalk Deploy
-        uses: einaregilsson/beanstalk-deploy@v21
-        with:
-          aws_access_key: ${{ secrets.AWS_ACCESS_KEY }}
-          aws_secret_key: ${{ secrets.AWS_SECRET_KEY }}
-          application_name: pin-app
-          environment_name: Pin-app-env
-          version_label: github-action-${{steps.current-time.outputs.formattedTime}}
-          region: ap-northeast-2
-          deployment_package: ./docker-compose.yml
+      # - name: Beanstalk Deploy
+      #   uses: einaregilsson/beanstalk-deploy@v21
+      #   with:
+      #     aws_access_key: ${{ secrets.AWS_ACCESS_KEY }}
+      #     aws_secret_key: ${{ secrets.AWS_SECRET_KEY }}
+      #     application_name: pin-app
+      #     environment_name: Pin-app-env
+      #     version_label: github-action-${{steps.current-time.outputs.formattedTime}}
+      #     region: ap-northeast-2
+      #     deployment_package: ./docker-compose.yml
 
