@@ -5,7 +5,6 @@ services:
     image: 702427404622.dkr.ecr.ap-northeast-2.amazonaws.com/pin-ecr:latest
     container_name: pin-api
     network_mode: "host"
-    #    restart: on-failure
     ports:
       - "8080:8080"
     env_file:
