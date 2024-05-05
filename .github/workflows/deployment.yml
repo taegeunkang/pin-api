@@ -23,19 +23,27 @@ jobs:
           touch src/main/resources/firebase/firebase-key.json
           echo $FIREBASE_SERVICE_KEY > src/main/resources/firebase/firebase-key.json
           
-      - name: aws ecr configure
-        uses: aws-actions/configure-aws-credentials@v4
+      # - name: aws ecr configure
+      #   uses: aws-actions/configure-aws-credentials@v4
+      #   env:
+      #     AWS_ACCESS_KEY: ${{secrets.AWS_ACCESS_KEY}}
+      #     AWS_SECRET_KEY: ${{secrets.AWS_SECRET_KEY}}
+      #   with:
+      #     aws-access-key-id: $AWS_ACCESS_KEY
+      #     aws-secret-access-key: $AWS_SECRET_KEY
+      #     aws-region: ap-northeast-2
+         
+      # - name: login to ecr
+      #   id: login-ecr
+      #   uses: aws-actions/amazon-ecr-login@v2
+      - name: login to ecr
+        uses: elgohr/ecr-login-action@v3
         env:
           AWS_ACCESS_KEY: ${{secrets.AWS_ACCESS_KEY}}
           AWS_SECRET_KEY: ${{secrets.AWS_SECRET_KEY}}
         with:
-          aws-access-key-id: $AWS_ACCESS_KEY
-          aws-secret-access-key: $AWS_SECRET_KEY
-          aws-region: ap-northeast-2
-         
-      - name: login to ecr
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
+          access_key: ${AWS_ACCESS_KEY}
+          secret_access_key: ${AWS_SECRET_KEY}
 
       - name: build and push to ecr
         env:
