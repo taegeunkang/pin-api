@@ -2,7 +2,8 @@ name: deploy
 
 on:
   push:
-    branches: [ "deploy-test" ]
+    tags:
+      - 'prod-[0-9]+.[0-9]+.[0-9]+'
 
 jobs:
   build:
@@ -14,6 +15,14 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@v4
+
+      - name: make firebase-key
+        env:
+          FIREBASE_SERVICE_KEY: ${{secrets.FIREBASE_SERVICE_KEY}}
+        run: |
+          mkdir src/main/resources/firebase
+          touch src/main/resources/firebase/firebase-key.json
+          echo $FIREBASE_SERVICE_KEY | base64 --decode > src/main/resources/firebase/firebase-key.json
 
       - name: configure
         uses: aws-actions/configure-aws-credentials@v4
@@ -34,3 +43,24 @@ jobs:
         run: |
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
+      - name: Get current time
+        uses: josStorer/get-current-time@v2
+        id: current-time
+        with:
+          format: YYYYMMDD-HH
+          utcOffset: "+09:00"
+      - name: make package
+        run: |
+          zip deploy.zip docker-compose.yml Dockerrun.aws.json
+
+      - name: Beanstalk Deploy
+        uses: einaregilsson/beanstalk-deploy@v21
+        with:
+          aws_access_key: ${{ secrets.AWS_ACCESS_KEY }}
+          aws_secret_key: ${{ secrets.AWS_SECRET_KEY }}
+          application_name: pin-server
+          environment_name: Pin-server-env
+          version_label: github-action-${{steps.current-time.outputs.formattedTime}}
+          region: ap-northeast-2
+          deployment_package: deploy.zip
