@@ -20,7 +20,7 @@ jobs:
         run: |
           mkdir src/main/resources/firebase
           touch src/main/resources/firebase/firebase-key.json
-          echo $FIREBASE_SERVICE_KEY > src/main/resources/firebase/firebase-key.json
+          echo $FIREBASE_SERVICE_KEY | base64 --decode > src/main/resources/firebase/firebase-key.json
 
       - name: configure
         uses: aws-actions/configure-aws-credentials@v4
