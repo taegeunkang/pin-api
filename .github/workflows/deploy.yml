@@ -14,6 +14,13 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@v4
+      - name: make firebase-key
+        env:
+          FIREBASE_SERVICE_KEY: ${{secrets.FIREBASE_SERVICE_KEY}}
+        run: |
+          mkdir src/main/resources/firebase
+          touch src/main/resources/firebase/firebase-key.json
+          echo $FIREBASE_SERVICE_KEY > src/main/resources/firebase/firebase-key.json
 
       - name: configure
         uses: aws-actions/configure-aws-credentials@v4
