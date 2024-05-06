@@ -33,7 +33,7 @@ class LoginCheckFilter(private val jwtUtil: com.pin.pinapi.core.security.util.JW
         if (requestURI.startsWith("/docs") || requestURI.startsWith("/swagger-ui")
             || requestURI.startsWith("/v2/api-docs") || requestURI.startsWith("/swagger-resources")
             || requestURI.startsWith("/csrf") || requestURI.startsWith("/webjars") || requestURI.startsWith("/s3")
-            
+
         ) {
             return true
         }
@@ -47,6 +47,7 @@ class LoginCheckFilter(private val jwtUtil: com.pin.pinapi.core.security.util.JW
 
     companion object {
         private val WHITE_LIST = arrayOf(
+            "/health",
             "/post/test",
             "/user/register",
             "/user/login",
