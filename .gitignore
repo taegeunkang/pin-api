@@ -33,13 +33,9 @@ out/
 /dist/
 /nbdist/
 /.nb-gradle/
-
+src/main/resources/application-dev.yml
+.env
 ### VS Code ###
 .vscode/
 Dockerfile
-src/main/resources/application.yml
-*.yml
-
 src/main/resources/firebase/**
-docker-compose.yml
-wait-for-it.sh

@@ -1,0 +1,36 @@
+name: deploy
+
+on:
+  push:
+    branches: [ "deploy-test" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+
+      - name: configure
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ap-northeast-2
+          aws-access-key-id: ${{secrets.AWS_ACCESS_KEY}}
+          aws-secret-access-key: ${{secrets.AWS_SECRET_KEY}}
+
+      - name: login to ecr
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: build and push to ecr
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY_NAME }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG

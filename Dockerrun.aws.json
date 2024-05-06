@@ -1,0 +1,6 @@
+{
+  "AWSEBDockerrunVersion": "3",
+  "image": {
+    "URI": "702427404622.dkr.ecr.ap-northeast-2.amazonaws.com/pin-ecr:latest"
+  }
+}
